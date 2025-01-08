@@ -38,7 +38,7 @@ jobs:
       # Build Docker image từ Dockerfile trong thư mục CoffeeHouseAPI
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/coffeehouse-api:latest -f CoffeeHouseAPI/Dockerfile CoffeeHouseAPI
+          docker build . -t foobar -f CoffeeHouseAPI/Dockerfile
 
       # Push Docker image lên Docker Hub
       - name: Push Docker image
