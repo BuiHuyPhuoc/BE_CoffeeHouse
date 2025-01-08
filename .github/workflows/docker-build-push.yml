@@ -18,15 +18,18 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0' # Thay đổi theo version .NET của bạn
+          dotnet-version: '8.0' # Thay đổi theo version .NET của bạn
 
       # Restore dependencies cho dự án trong thư mục CoffeeHouseAPI
       - name: Restore dependencies
-        run: dotnet restore CoffeeHouse.sln
+        run: dotnet restore .
 
       # Build dự án ASP.NET trong thư mục CoffeeHouseAPI
+      - name: Build CoffeeHouseLib
+        run: dotnet build CoffeeHouseLib/CoffeeHouseLib.csproj --configuration Release
+
       - name: Build the project
-        run: dotnet build CoffeeHouse.sln --configuration Release --no-restore
+        run: dotnet build CoffeeHouseAPI/CoffeeHouseAPI.csproj --configuration Release --no-restore
 
       # Login vào Docker Hub
       - name: Log in to Docker Hub
@@ -38,7 +41,7 @@ jobs:
       # Build Docker image từ Dockerfile trong thư mục CoffeeHouseAPI
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/coffeehouse-api:latest -f CoffeeHouseAPI/Dockerfile CoffeeHouseAPI
+          docker build . -t foobar -f CoffeeHouseAPI/Dockerfile
 
       # Push Docker image lên Docker Hub
       - name: Push Docker image
