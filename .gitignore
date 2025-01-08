@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/bin/Debug
+/CoffeeHouseAPI/.config
+/CoffeeHouseAPI/bin
+/CoffeeHouseAPI/obj
+/CoffeeHouseAPI/Properties
+/CoffeeHouseLib/bin
+/CoffeeHouseLib/obj
+/obj
