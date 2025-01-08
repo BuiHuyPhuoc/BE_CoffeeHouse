@@ -22,10 +22,10 @@ jobs:
 
       # Build the project
       - name: Restore dependencies
-        run: dotnet restore CoffeeHouseAPI
+        run: dotnet restore
 
       - name: Build the project
-        run: dotnet build CoffeeHouseAPI --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore
 
       # Login to Docker Hub
       - name: Log in to Docker Hub
