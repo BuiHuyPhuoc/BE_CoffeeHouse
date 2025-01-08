@@ -22,11 +22,11 @@ jobs:
 
       # Restore dependencies cho dự án trong thư mục CoffeeHouseAPI
       - name: Restore dependencies
-        run: dotnet restore CoffeeHouse.sln
+        run: dotnet restore .
 
       # Build dự án ASP.NET trong thư mục CoffeeHouseAPI
       - name: Build the project
-        run: dotnet build CoffeeHouse.sln --configuration Release --no-restore
+        run: dotnet build . --configuration Release --no-restore
 
       # Login vào Docker Hub
       - name: Log in to Docker Hub
