@@ -25,8 +25,11 @@ jobs:
         run: dotnet restore .
 
       # Build dự án ASP.NET trong thư mục CoffeeHouseAPI
+      - name: Build CoffeeHouseLib
+        run: dotnet build CoffeeHouseLib/CoffeeHouseLib.csproj --configuration Release
+
       - name: Build the project
-        run: dotnet build . --configuration Release --no-restore
+        run: dotnet build CoffeeHouseAPI/CoffeeHouseAPI.csproj --configuration Release --no-restore
 
       # Login vào Docker Hub
       - name: Log in to Docker Hub
