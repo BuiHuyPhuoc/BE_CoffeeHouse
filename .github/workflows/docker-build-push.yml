@@ -18,7 +18,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0' # Thay đổi theo version .NET của bạn
+          dotnet-version: '8.0' # Thay đổi theo version .NET của bạn
 
       # Restore dependencies cho dự án trong thư mục CoffeeHouseAPI
       - name: Restore dependencies
