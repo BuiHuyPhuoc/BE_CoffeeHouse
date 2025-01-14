@@ -46,4 +46,4 @@ jobs:
       # Push Docker image lên Docker Hub
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/coffeehouse-api:v1
+          docker push ${{ secrets.DOCKER_USERNAME }}/init:v1
