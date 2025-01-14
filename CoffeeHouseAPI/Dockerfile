@@ -24,8 +24,8 @@ COPY . .
 WORKDIR "/src/CoffeeHouseAPI"
 RUN dotnet build "CoffeeHouseAPI.csproj" -c Release -o /app/build
 
-# Publish dự án sang giai đoạn production
-RUN dotnet publish "CoffeeHouseAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+FROM build AS publish
+RUN dotnet publish CoffeeHouseAPI.csproj -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # Image production cuối cùng
 FROM base AS final
