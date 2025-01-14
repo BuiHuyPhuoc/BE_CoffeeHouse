@@ -41,7 +41,7 @@ jobs:
       # Bước 3: Build Docker image từ thư mục CoffeeHouseAPI với tag v1
       - name: Build Docker image
         run: |
-          docker build -t phuoc194203/init:v1 CoffeeHouseAPI/
+          docker build -t phuoc194203/init:v1 .
   
       # Bước 4: Push Docker image lên Docker Hub với tag v1
       - name: Push Docker image
