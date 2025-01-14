@@ -15,6 +15,8 @@ public partial class Image
 
     public int ImageClassId { get; set; }
 
+    public string? FirebaseImage { get; set; }
+
     public virtual ImageClass ImageClass { get; set; } = null!;
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();

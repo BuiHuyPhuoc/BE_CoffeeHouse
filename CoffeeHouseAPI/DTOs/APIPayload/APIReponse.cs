@@ -1,8 +1,8 @@
 ﻿namespace CoffeeHouseAPI.DTOs.APIPayload
 {
-    public class APIReponse
+    public class APIResponseBase
     {
-        public APIReponse() { }
+        public APIResponseBase() { }
         public int Status { get; set; }
         public string Message { get; set; } = null!;
         public bool IsSuccess { get; set; }

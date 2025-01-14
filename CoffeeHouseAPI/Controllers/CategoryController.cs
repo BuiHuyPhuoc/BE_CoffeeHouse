@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Category;
+using CoffeeHouseAPI.Enums;
+using CoffeeHouseAPI.Helper;
 using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,11 +28,12 @@ namespace CoffeeHouseAPI.Controllers
         public async Task<IActionResult> GetCateogry()
         {
             var category = await _context.Categories.ToListAsync();
-            List<CategoryDTO> categoryDTO = _mapper.Map<List<CategoryDTO>>(category);
-            return Ok(new APIReponse {
+            List<CategoryResponseDTO> categoryDTO = _mapper.Map<List<CategoryResponseDTO>>(category);
+            return Ok(new APIResponseBase
+            {
                 Status = (int)StatusCodes.Status200OK,
                 Value = categoryDTO,
-                Message = "Get cateogry success",
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
                 IsSuccess = true
             });
         }
@@ -42,19 +45,49 @@ namespace CoffeeHouseAPI.Controllers
             var category = await _context.Categories.FindAsync(id);
             if (category == null)
             {
-                return BadRequest(new APIReponse
+                return BadRequest(new APIResponseBase
                 {
                     Status = (int)StatusCodes.Status400BadRequest,
-                    Message = "Get cateogry failed",
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
                     IsSuccess = false
                 });
             }
             CategoryDTO categoryDTO = _mapper.Map<CategoryDTO>(category);
-            return Ok(new APIReponse
+            return Ok(new APIResponseBase
             {
                 Status = (int)StatusCodes.Status200OK,
                 Value = categoryDTO,
-                Message = "Get cateogry success",
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                IsSuccess = true
+            });
+        }
+
+        [HttpPut]
+        [Route("UpdateCategory")]
+
+        public async Task<IActionResult> UpdateCategory([FromQuery] int id, [FromBody] CategoryRequestDTO categoryDTO)
+        {
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    Status = (int)StatusCodes.Status400BadRequest,
+                    Value = null,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.PUT),
+                    IsSuccess = false
+                });
+            }
+
+            category.IdParent = categoryDTO.IdParent;
+            category.CategoryName = categoryDTO.CategoryName;
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                Status = (int)StatusCodes.Status200OK,
+                Value = category,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
                 IsSuccess = true
             });
         }

@@ -4,4 +4,10 @@ connectionString = "Data Source=DBCoffeeHouse.mssql.somee.com;Initial Catalog=DB
 
 Scaffold-DbContext "Server=DBCoffeeHouse.mssql.somee.com;Database=DBCoffeeHouse;User Id=buihuyphuc111_SQLLogin_1;Password=Somee2k3.;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
 
-Scaffold-DbContext "Host=db.jvxqfvhlilugqgovphhv.supabase.co;Database=postgres;Username=postgres;Password=123;SSL Mode=Require;Trust Server Certificate=true" Npgsql.EntityFrameworkCore.PostgreSQL -OutputDir Models -Context DbcoffeeHouseContext
+Scaffold-DbContext "Host=db.jvxqfvhlilugqgovphhv.supabase.co;Database=postgres;Username=postgres;Password=DJhnByPTU5uSGwmU;SSL Mode=Require;Trust Server Certificate=true" Npgsql.EntityFrameworkCore.PostgreSQL -OutputDir Models -Context DbcoffeeHouseContext
+riGBOl8ei0uFDdj5
+
+Scaffold-DbContext "Server=aws-0-ap-southeast-1.pooler.supabase.com;Port=6543;Database=postgres;User Id=postgres.wibhwcxmqisdskuonlho;Password=riGBOl8ei0uFDdj5;" Npgsql.EntityFrameworkCore.PostgreSQL -OutputDir Models -Context DbcoffeeHouseContext
+
+Scaffold-DbContext "Server=mssql-190398-0.cloudclusters.net,10096;Database=DBCoffeeHouse;User Id=admin;Password=Puu194203;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+

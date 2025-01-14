@@ -29,7 +29,7 @@ namespace CoffeeHouseAPI.Controllers
                 };
             }
             account.VerifyTime = DateTime.Now;
-            this.SaveChanges(_context);
+            await this.SaveChanges(_context);
             return new ContentResult
             {
                 Content = "<p> <strong>Verify success</strong> </p>",

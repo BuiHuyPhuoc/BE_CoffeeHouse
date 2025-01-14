@@ -5,6 +5,7 @@ using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -52,9 +53,9 @@ namespace CoffeeHouseAPI.Controllers
         }
 
         [NonAction]
-        public void SaveChanges(DbcoffeeHouseContext context)
+        public async Task SaveChanges(DbcoffeeHouseContext context)
         {
-            var result = context.SaveChanges();
+            var result = await context.SaveChangesAsync();
             if (result < 0)
                 throw new Exception("Error!");
         }

@@ -10,8 +10,8 @@ namespace CoffeeHouseAPI.DTOs.Auth
 
     public class VerifyAccountRequest
     {
-        [EmailAddress]
-        public string Email { get; set; } = null!;
+        //[EmailAddress]
+        //public string Email { get; set; } = null!;
         public string Otp { get; set; } = null!;
     }
 }

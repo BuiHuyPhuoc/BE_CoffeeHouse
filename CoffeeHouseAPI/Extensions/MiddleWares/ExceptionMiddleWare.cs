@@ -22,26 +22,9 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
 
         public async Task InvokeAsync(HttpContext httpContext, IServiceProvider serviceProvider)
         {
-            var dbContext = serviceProvider.GetService<DbcoffeeHouseContext>();
-
-            if (httpContext.Request.Method == HttpMethods.Get)
-            {
-                await _next(httpContext);
-                return;
-            }
-
-            if (dbContext == null)
-            {
-                await _next(httpContext);
-                return;
-            }
-
-            using var transaction = await dbContext.Database.BeginTransactionAsync();
-
             try
             {
                 await _next(httpContext);
-                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
@@ -98,23 +81,16 @@ log.Info(httpContext.Response.WriteAsync(json));
 await httpContext.Response.WriteAsync(json);
 */
 
-                await transaction.RollbackAsync();
+               _logger.LogError(ex, "Đã xảy ra lỗi trong quá trình xử lý request.");
 
-                _logger.LogError(ex, "Đã xảy ra lỗi trong quá trình xử lý request.");
-
-                if (!httpContext.Response.HasStarted)
+                httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                httpContext.Response.ContentType = "application/json";
+                await httpContext.Response.WriteAsJsonAsync(new
                 {
-                    httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    httpContext.Response.ContentType = "application/json";
-                    await httpContext.Response.WriteAsJsonAsync(new
-                    {
-                        StatusCode = (int)HttpStatusCode.InternalServerError,
-                        Message = "Internal Error.",
-                        Detail = "An unexpected error occurred.",
-                    });
-                }
-
-                throw;
+                    StatusCode = (int)HttpStatusCode.InternalServerError,
+                    Message = "Internal Error.",
+                    Detail = "An unexpected error occurred.",
+                });
             }
 
         }

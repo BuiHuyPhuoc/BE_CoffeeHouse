@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CoffeeHouseAPI.Enums;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using System;
 using System.Text;
 
 namespace CoffeeHouseAPI.Helper
@@ -56,5 +58,40 @@ namespace CoffeeHouseAPI.Helper
             }
             return new string(array);
         }
+
+        private static String CreateData(bool isSuccess)
+        {
+            return (isSuccess) ? "Create data success" : "Create data failed";
+        }
+
+        private static String GetData(bool isSuccess)
+        {
+            return (isSuccess) ? "Get data success" : "There is no item to show";
+        }
+
+        private static String DeleteData(bool isSuccess) {
+            return (isSuccess) ? "Delete data success" : "Delete data failed";
+        }
+
+        private static String UpdateData(bool isSuccess)
+        {
+            return (isSuccess) ? "Update data success" : "Update data failed";
+        }
+
+        public static String API_ACTION_RESPONSE(bool isSuccess, Enum apiAction) {
+            switch (apiAction) {
+                case API_ACTION.GET:
+                    return GetData(isSuccess);
+                case API_ACTION.POST:
+                    return CreateData(isSuccess);
+                case API_ACTION.PUT:
+                    return UpdateData(isSuccess);
+                case API_ACTION.DELETE:
+                    return DeleteData(isSuccess);
+                default:
+                    return string.Empty;
+            }
+        }
+
     }
 }

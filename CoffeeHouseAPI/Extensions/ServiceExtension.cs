@@ -1,4 +1,5 @@
 ﻿using CoffeeHouseAPI.Services.Email;
+using CoffeeHouseAPI.Services.Firebase;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using OrderService.Helper;
@@ -37,6 +38,10 @@ namespace CoffeeHouseAPI.Extensions
             {
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
+
+            // Register for Firebase Service
+            services.AddSingleton<FirebaseService>();
+
         }
     }
 }

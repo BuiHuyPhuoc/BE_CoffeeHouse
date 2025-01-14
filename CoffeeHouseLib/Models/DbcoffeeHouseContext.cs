@@ -155,7 +155,6 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.HasIndex(e => e.Id, "UQ__Image__3214EC06C34BEC6F").IsUnique();
 
-            entity.Property(e => e.Content).HasMaxLength(300);
             entity.Property(e => e.ImageName).HasMaxLength(255);
             entity.Property(e => e.ImageType).HasMaxLength(255);
 
@@ -271,6 +270,8 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Product__3214EC0775E44AA1");
 
             entity.ToTable("Product");
+
+            entity.HasIndex(e => e.CategoryId, "IX_Product_CategoryId");
 
             entity.HasIndex(e => e.Id, "UQ__Product__3214EC0614DAD9E1").IsUnique();
 
