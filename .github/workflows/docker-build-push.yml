@@ -38,10 +38,10 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Bước 3: Build Docker image với tag v1
+      # Bước 3: Build Docker image từ thư mục CoffeeHouseAPI với tag v1
       - name: Build Docker image
         run: |
-          docker build -t phuoc194203/init:v1 .
+          docker build -t phuoc194203/init:v1 CoffeeHouseAPI/
   
       # Bước 4: Push Docker image lên Docker Hub với tag v1
       - name: Push Docker image
