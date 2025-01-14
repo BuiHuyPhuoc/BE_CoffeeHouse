@@ -11,22 +11,21 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # Sao chép các file project từ thư mục gốc của repo
-COPY CoffeeHouseAPI/CoffeeHouseAPI.csproj CoffeeHouseAPI/
-COPY CoffeeHouseLib/CoffeeHouseLib.csproj CoffeeHouseLib/
+COPY ["CoffeeHouseAPI/CoffeeHouseAPI.csproj", "CoffeeHouseAPI/"]
+COPY ["CoffeeHouseLib/CoffeeHouseLib.csproj", "CoffeeHouseLib/"]
 
 # Khôi phục dependencies cho dự án
-RUN dotnet restore CoffeeHouseAPI/CoffeeHouseAPI.csproj
+RUN dotnet restore "CoffeeHouseAPI/CoffeeHouseAPI.csproj"
 
 # Sao chép toàn bộ mã nguồn từ repo vào container
 COPY . .
 
 # Build dự án
-WORKDIR /src/CoffeeHouseAPI
-RUN dotnet build CoffeeHouseAPI.csproj -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/CoffeeHouseAPI"
+RUN dotnet build "CoffeeHouseAPI.csproj" -c Release -o /app/build
 
 # Publish dự án sang giai đoạn production
-FROM build AS publish
-RUN dotnet publish CoffeeHouseAPI.csproj -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "CoffeeHouseAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Image production cuối cùng
 FROM base AS final
