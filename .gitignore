@@ -9,3 +9,5 @@
 /obj/Docker
 /CoffeeHouseAPI/bin/Debug/net8.0
 /CoffeeHouseLib/bin/Debug/net8.0
+/.vs/ProjectEvaluation
+/CoffeeHouseAPI/.vs
