@@ -25,19 +25,21 @@ namespace OrderService.Helper
 
             CreateMap<Category, CategoryRequestDTO>();
             CreateMap<CategoryRequestDTO, Category>();
-            CreateMap<Category, CategoryResponseDTO>();
-            CreateMap<CategoryResponseDTO, Category>();
+            CreateMap<Category, CategoryResponseDTO>()
+                .ForMember(s => s.ChildCategory, option => option.MapFrom(s => s.InverseIdParentNavigation)); ;
+            CreateMap<CategoryResponseDTO, Category>()
+                .ForMember(s => s.InverseIdParentNavigation, option => option.MapFrom(s => s.ChildCategory));
 
             CreateMap<Product, ProductRequestDTO>();
             CreateMap<ProductRequestDTO, Product>();
             CreateMap<Product, ProductResponseDTO>();
-            CreateMap<ProductResponseDTO, Product>();
+            CreateMap<Product, ProductResponseDTO>();
 
-            CreateMap<Image, ImageRequestDTO>()
-                .ForMember(d => d.Content, option => option.MapFrom(s => Convert.ToBase64String(s.Content)));
+            //CreateMap<Image, ImageRequestDTO>()
+            //    .ForMember(d => d.Content, option => option.MapFrom(s => Convert.ToBase64String(s.Content)));
 
-            CreateMap<ImageRequestDTO, Image>()
-                .ForMember(d => d.Content, option => option.MapFrom(s => Convert.FromBase64String(s.Content.Base64Encode())));
+            //CreateMap<ImageRequestDTO, Image>()
+            //    .ForMember(d => d.Content, option => option.MapFrom(s => Convert.FromBase64String(s.Content.Base64Encode())));
 
             CreateMap<Image, ImageResponseDTO>();
             CreateMap<ImageResponseDTO, Image>();

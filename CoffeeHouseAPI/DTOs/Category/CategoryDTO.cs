@@ -13,5 +13,6 @@
 
     public class CategoryResponseDTO : CategoryDTO
     {
+        public List<CategoryResponseDTO>? ChildCategory { get; set; }
     }
 }

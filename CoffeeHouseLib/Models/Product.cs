@@ -15,13 +15,17 @@ public partial class Product
 
     public bool IsValid { get; set; }
 
+    public int? ImageDefault { get; set; }
+
     public virtual Category Category { get; set; } = null!;
+
+    public virtual Image? ImageDefaultNavigation { get; set; }
 
     public virtual ICollection<ProductDiscount> ProductDiscounts { get; set; } = new List<ProductDiscount>();
 
     public virtual ICollection<ProductSize> ProductSizes { get; set; } = new List<ProductSize>();
 
-    public virtual ProductTopping? ProductTopping { get; set; }
-
     public virtual ICollection<Image> Images { get; set; } = new List<Image>();
+
+    public virtual ICollection<Topping> Toppings { get; set; } = new List<Topping>();
 }

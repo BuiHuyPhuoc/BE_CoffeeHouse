@@ -27,7 +27,7 @@ namespace CoffeeHouseAPI.Controllers
         [Route("GetCateogry")]
         public async Task<IActionResult> GetCateogry()
         {
-            var category = await _context.Categories.ToListAsync();
+            var category = await _context.Categories.Include(x => x.InverseIdParentNavigation).Where(x => x.IdParent == null).ToListAsync();
             List<CategoryResponseDTO> categoryDTO = _mapper.Map<List<CategoryResponseDTO>>(category);
             return Ok(new APIResponseBase
             {
