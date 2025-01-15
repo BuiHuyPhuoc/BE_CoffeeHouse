@@ -15,5 +15,5 @@ public partial class Topping
 
     public virtual ICollection<OrderTopping> OrderToppings { get; set; } = new List<OrderTopping>();
 
-    public virtual ICollection<ProductTopping> ProductToppings { get; set; } = new List<ProductTopping>();
+    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }
