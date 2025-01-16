@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using AutoMapper;
+using CoffeeHouseAPI.DTOs.Address;
 using CoffeeHouseAPI.DTOs.Auth;
 using CoffeeHouseAPI.DTOs.Category;
 using CoffeeHouseAPI.DTOs.Image;
@@ -44,6 +45,9 @@ namespace OrderService.Helper
 
             CreateMap<ProductSize, ProductSizeRequestDTO>();
             CreateMap<ProductSizeRequestDTO, ProductSize>();
+
+            CreateMap<AddressDTO, Address>();
+            CreateMap<Address, AddressDTO>();
         }
     }
 }

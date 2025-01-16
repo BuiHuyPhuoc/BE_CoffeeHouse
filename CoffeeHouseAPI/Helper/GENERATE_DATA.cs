@@ -7,6 +7,20 @@ namespace CoffeeHouseAPI.Helper
 {
     public static class GENERATE_DATA
     {
+        public static string STATUSCODE_MESSAGE(int code)
+        {
+            switch (code)
+            {
+                case (int)StatusCodes.Status401Unauthorized:
+                    return "Login time out";
+                case (int)StatusCodes.Status404NotFound:
+                    return "Data not found";
+                default:
+                    return "Error!!";
+
+            }
+        }
+
         public static string GenerateNumber(int stringLength)
         {
             Random random = new Random();

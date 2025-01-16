@@ -22,7 +22,7 @@ namespace CoffeeHouseAPI.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [NonAction]
-        public LoginResponse? GetLoginResponseFromHttpContext(AuthorizationFilterContext context)
+        public LoginResponse? GetLoginResponseFromHttpContext()
         {
             var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
             DbcoffeeHouseContext _context = new DbcoffeeHouseContext();
@@ -43,6 +43,7 @@ namespace CoffeeHouseAPI.Controllers
         {
             LoginResponse loginResponse = new LoginResponse
             {
+                Id = customer.Id,
                 FullName = customer.FullName,
                 DateOfBirth = customer.DateOfBirth,
                 Phone = customer.Phone,
