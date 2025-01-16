@@ -36,17 +36,17 @@ namespace CoffeeHouseAPI.Controllers
         [Route("GetProduct")]
         public async Task<IActionResult> GetProduct()
         {
-            var categories = await _context.Categories.Include(x => x.Products).Where(x => x.IdParent != null && x.Products.Count != 0).ToListAsync();
-            List<ProductByCategoryDTO> products = new List<ProductByCategoryDTO>();
-            foreach (var category in categories)
+            var products = await _context.Products.Include(x => x.ProductSizes).Include(x => x.ImageDefaultNavigation)
+                .Include(x => x.Category).Include(x => x.Images).ToListAsync();
+            var productDTOs = _mapper.Map<List<ProductResponseDTO>>(products);
+            return Ok(new APIResponseBase
             {
-                ProductByCategoryDTO productResponseDTO = new ProductByCategoryDTO();
-                productResponseDTO.Category = _mapper.Map<CategoryResponseDTO>(category);
-                var productByCateogry = _context.Products.Include(x => x.Images.Take(1)).Where(x => x.CategoryId == category.Id).ToList();
-                productResponseDTO.Products = _mapper.Map<List<ProductResponseDTO>>(productByCateogry);
-                products.Add(productResponseDTO);
-            }
-            return Ok(products);
+                Status = (int)StatusCodes.Status200OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = productDTOs,
+                IsSuccess = true
+            });
+
         }
 
         [HttpPost]
@@ -61,7 +61,7 @@ namespace CoffeeHouseAPI.Controllers
                     Status = (int)StatusCodes.Status400BadRequest
                 });
 
-            if (request.Sizes.Count == 0)
+            if (request.ProductSizes.Count == 0)
                 return BadRequest(new APIResponseBase
                 {
                     IsSuccess = false,
@@ -94,7 +94,7 @@ namespace CoffeeHouseAPI.Controllers
             await this.SaveChanges(_context);
 
             // Add product size
-            List<ProductSize> productSizes = _mapper.Map<List<ProductSize>>(request.Sizes);
+            List<ProductSize> productSizes = _mapper.Map<List<ProductSize>>(request.ProductSizes);
             foreach (var productSize in productSizes)
             {
                 productSize.ProductId = newProduct.Id;
@@ -113,60 +113,5 @@ namespace CoffeeHouseAPI.Controllers
                 Value = productDTO
             });
         }
-
-
-        //[HttpGet]
-        //[Route("GetProduct")]
-        //public IActionResult GetProduct([FromQuery] int? categoryId)
-        //{
-        //    Category? category = _context.Categories.Where(x => x.Id == categoryId).FirstOrDefault() ?? null ;
-        //    if (category == null)
-        //    {
-        //        var product = _context.Products.Include(x => x.Category).Where(x => x.IsValid).ToList();
-        //        List<ProductDTO> productDTO = _mapper.Map<List<ProductDTO>>(product);
-        //        if (product.Count == 0)
-        //        {
-        //            return NotFound(new APIResponseBase
-        //            {
-        //                IsSuccess = true,
-        //                Status = (int)StatusCodes.Status404NotFound,
-        //                Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
-        //                Value = productDTO
-        //            });
-        //        }
-
-        //        return Ok(new APIResponseBase
-        //        {
-        //            IsSuccess = true,
-        //            Status = (int)StatusCodes.Status200OK,
-        //            Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
-        //            Value = productDTO
-        //        });
-        //    }
-        //    else
-        //    {
-        //        var product = _context.Products.Include(x => x.Category).Where(x => x.IsValid && x.CategoryId == categoryId).ToList();
-        //        List<ProductDTO> productDTO = _mapper.Map<List<ProductDTO>>(product);
-        //        if (product.Count == 0)
-        //        {
-        //            return NotFound(new APIResponseBase
-        //            {
-        //                IsSuccess = true,
-        //                Status = (int)StatusCodes.Status404NotFound,
-        //                Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
-        //                Value = productDTO
-        //            });
-        //        }
-
-        //        return Ok(new APIResponseBase
-        //        {
-        //            IsSuccess = true,
-        //            Status = (int)StatusCodes.Status200OK,
-        //            Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
-        //            Value = productDTO
-        //        });
-        //    }
-        //}
-
     }
 }

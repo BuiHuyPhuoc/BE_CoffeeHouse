@@ -45,8 +45,6 @@ public partial class DbcoffeeHouseContext : DbContext
 
     public virtual DbSet<ProductSize> ProductSizes { get; set; }
 
-    public virtual DbSet<ProductTopping> ProductToppings { get; set; }
-
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public virtual DbSet<Topping> Toppings { get; set; }
@@ -114,6 +112,10 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.HasIndex(e => e.Id, "UQ__Category__3214EC065893F82D").IsUnique();
 
             entity.Property(e => e.CategoryName).HasMaxLength(50);
+
+            entity.HasOne(d => d.IdParentNavigation).WithMany(p => p.InverseIdParentNavigation)
+                .HasForeignKey(d => d.IdParent)
+                .HasConstraintName("FK__Category__IdPare__19DFD96B");
         });
 
         modelBuilder.Entity<Customer>(entity =>
@@ -283,7 +285,11 @@ public partial class DbcoffeeHouseContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Product__Categor__7C4F7684");
 
-            entity.HasMany(d => d.Images).WithMany(p => p.Products)
+            entity.HasOne(d => d.ImageDefaultNavigation).WithMany(p => p.Products)
+                .HasForeignKey(d => d.ImageDefault)
+                .HasConstraintName("FK__Product__ImageDe__18EBB532");
+
+            entity.HasMany(d => d.Images).WithMany(p => p.ProductsNavigation)
                 .UsingEntity<Dictionary<string, object>>(
                     "ProductImage",
                     r => r.HasOne<Image>().WithMany()
@@ -298,6 +304,24 @@ public partial class DbcoffeeHouseContext : DbContext
                     {
                         j.HasKey("ProductId", "ImageId").HasName("PK__ProductI__635DA9BD43845267");
                         j.ToTable("ProductImage");
+                    });
+
+            entity.HasMany(d => d.Toppings).WithMany(p => p.Products)
+                .UsingEntity<Dictionary<string, object>>(
+                    "ProductTopping",
+                    r => r.HasOne<Topping>().WithMany()
+                        .HasForeignKey("ToppingId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK__ProductTo__Toppi__17036CC0"),
+                    l => l.HasOne<Product>().WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK__ProductTo__Produ__160F4887"),
+                    j =>
+                    {
+                        j.HasKey("ProductId", "ToppingId");
+                        j.ToTable("ProductTopping");
+                        j.HasIndex(new[] { "ProductId", "ToppingId" }, "IX_ProductId_ToppingId");
                     });
         });
 
@@ -338,27 +362,6 @@ public partial class DbcoffeeHouseContext : DbContext
                 .HasForeignKey(d => d.ProductId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__ProductSi__Produ__01142BA1");
-        });
-
-        modelBuilder.Entity<ProductTopping>(entity =>
-        {
-            entity.HasKey(e => new { e.ProductId, e.ToppingId }).HasName("PK__ProductT__FAECEA05330BA8B6");
-
-            entity.ToTable("ProductTopping");
-
-            entity.HasIndex(e => e.ProductId, "UQ__ProductT__B40CC6CC15C88030").IsUnique();
-
-            entity.Property(e => e.ProductId).ValueGeneratedOnAdd();
-
-            entity.HasOne(d => d.Product).WithOne(p => p.ProductTopping)
-                .HasForeignKey<ProductTopping>(d => d.ProductId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ProductTo__Produ__02084FDA");
-
-            entity.HasOne(d => d.Topping).WithMany(p => p.ProductToppings)
-                .HasForeignKey(d => d.ToppingId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ProductTo__Toppi__02FC7413");
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>
