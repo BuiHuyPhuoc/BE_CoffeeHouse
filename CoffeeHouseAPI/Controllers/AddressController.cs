@@ -7,6 +7,7 @@ using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -70,6 +71,13 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             request.CustomerId = loginResponse.Id;
+
+            var currentDefaultAddress = await _context.Addresses.Where(x => x.CustomerId == loginResponse.Id && x.IsDefault).FirstOrDefaultAsync();
+            if (currentDefaultAddress != null && request.IsDefault == true) {
+                // Set old address is not default
+                currentDefaultAddress.IsDefault = false;
+                await this.SaveChanges(_context);
+            }
 
             var address = _mapper.Map<Address>(request);
 
