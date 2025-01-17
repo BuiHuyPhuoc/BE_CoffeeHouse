@@ -32,6 +32,6 @@ namespace CoffeeHouseAPI.DTOs.Product
         public List<ProductSizeRequestDTO> ProductSizes { get; set; } = new List<ProductSizeRequestDTO>();
 
         public List<ImageResponseDTO> Images { get; set; } = new List<ImageResponseDTO>();
-        public CategoryResponseDTO Category { get; set; } = null!;
+        public CategoryDTO Category { get; set; } = null!;
     }
 }
