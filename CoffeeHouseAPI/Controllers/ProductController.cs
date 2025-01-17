@@ -36,8 +36,8 @@ namespace CoffeeHouseAPI.Controllers
         [Route("GetProduct")]
         public async Task<IActionResult> GetProduct()
         {
-            var products = await _context.Products.Include(x => x.ProductSizes).Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.Category).Include(x => x.Images).ToListAsync();
+            var products = await _context.Products.Include(x => x.ProductSizes.Where(x => x.IsValid)).Include(x => x.ImageDefaultNavigation)
+                .Include(x => x.Category).Include(x => x.Images).Where(x => x.IsValid).ToListAsync();
             var productDTOs = _mapper.Map<List<ProductResponseDTO>>(products);
             return Ok(new APIResponseBase
             {
@@ -79,7 +79,8 @@ namespace CoffeeHouseAPI.Controllers
 
             // Add image to firebase
             List<Image> images = _mapper.Map<List<Image>>(request.Images);
-            for (int i = 0; i< request.Images.Count; i++) {
+            for (int i = 0; i < request.Images.Count; i++)
+            {
                 string url = await _firebaseService.UploadImageAsync(request.Images[i]);
                 images[i].FirebaseImage = url;
             }
@@ -104,13 +105,39 @@ namespace CoffeeHouseAPI.Controllers
 
             productDTO = _mapper.Map<ProductDTO>(newProduct);
             productDTO.Images = new List<ImageRequestDTO>();
-            
+
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
                 Status = (int)StatusCodes.Status200OK,
                 Message = "Add product success",
                 Value = productDTO
+            });
+        }
+
+        [HttpGet]
+        [Route("GetDetailProduct")]
+        public async Task<IActionResult> GetDetailProduct(int idProduct)
+        {
+            var product = await _context.Products.Include(x => x.ProductSizes.Where(x => x.IsValid)).Include(x => x.ImageDefaultNavigation)
+                .Include(x => x.Category).Include(x => x.Images).Where(x => x.IsValid && x.Id == idProduct).FirstOrDefaultAsync();
+            var productDTO = _mapper.Map<ProductResponseDTO>(product);
+            if (product == null)
+            {
+                return NotFound(new APIResponseBase
+                {
+                    Status = (int)StatusCodes.Status404NotFound,
+                    IsSuccess = false,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
+                });
+            }
+
+            return Ok(new APIResponseBase
+            {
+                Status = (int)StatusCodes.Status200OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = productDTO,
+                IsSuccess = true
             });
         }
     }
