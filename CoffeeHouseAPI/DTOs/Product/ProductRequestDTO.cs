@@ -16,7 +16,7 @@ namespace CoffeeHouseAPI.DTOs.Product
         public int CategoryId { get; set; }
 
         public bool IsValid { get; set; } = true;
-        public ImageResponseDTO ImageDefaultNavigation { get; set; } = null!;
+        public ImageRequestDTO ImageDefaultNavigation { get; set; } = null!;
 
     }
     public class ProductRequestDTO : ProductModel
