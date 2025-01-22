@@ -34,7 +34,7 @@ namespace OrderService.Helper
             CreateMap<Product, ProductRequestDTO>();
             CreateMap<ProductRequestDTO, Product>();
             CreateMap<Product, ProductResponseDTO>();
-            CreateMap<Product, ProductResponseDTO>();
+            CreateMap<ProductResponseDTO, Product>();
 
             //CreateMap<Image, ImageRequestDTO>()
             //    .ForMember(d => d.Content, option => option.MapFrom(s => Convert.ToBase64String(s.Content)));
@@ -44,6 +44,8 @@ namespace OrderService.Helper
 
             CreateMap<Image, ImageResponseDTO>();
             CreateMap<ImageResponseDTO, Image>();
+            CreateMap<Image, ImageRequestDTO>();
+            CreateMap<ImageRequestDTO, Image>();
 
             CreateMap<ProductSize, ProductSizeRequestDTO>();
             CreateMap<ProductSizeRequestDTO, ProductSize>();

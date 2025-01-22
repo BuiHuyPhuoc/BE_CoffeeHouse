@@ -42,7 +42,7 @@ namespace CoffeeHouseAPI.Controllers
         [Route("GetCateogryById")]
         public async Task<IActionResult> GetCateogryById([FromQuery] int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _context.Categories.Where(x => x.Id == id).Include(x => x.InverseIdParentNavigation).FirstOrDefaultAsync();
             if (category == null)
             {
                 return BadRequest(new APIResponseBase
@@ -52,7 +52,7 @@ namespace CoffeeHouseAPI.Controllers
                     IsSuccess = false
                 });
             }
-            CategoryDTO categoryDTO = _mapper.Map<CategoryDTO>(category);
+            CategoryDTO categoryDTO = _mapper.Map<CategoryResponseDTO>(category);
             return Ok(new APIResponseBase
             {
                 Status = (int)StatusCodes.Status200OK,
@@ -64,7 +64,6 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPut]
         [Route("UpdateCategory")]
-
         public async Task<IActionResult> UpdateCategory([FromQuery] int id, [FromBody] CategoryRequestDTO categoryDTO)
         {
             var category = await _context.Categories.FindAsync(id);

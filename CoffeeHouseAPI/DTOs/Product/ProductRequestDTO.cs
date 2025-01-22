@@ -16,7 +16,7 @@ namespace CoffeeHouseAPI.DTOs.Product
         public int CategoryId { get; set; }
 
         public bool IsValid { get; set; } = true;
-        public ImageRequestDTO ImageDefaultNavigation { get; set; } = null!;
+        
 
     }
     public class ProductRequestDTO : ProductModel
@@ -24,7 +24,8 @@ namespace CoffeeHouseAPI.DTOs.Product
         public List<ProductSizeRequestDTO> ProductSizes { get; set; } = new List<ProductSizeRequestDTO>();
 
         public List<ImageRequestDTO> Images { get; set; } = new List<ImageRequestDTO>();
-       
+        public ImageRequestDTO ImageDefaultNavigation { get; set; } = null!;
+
     }
 
     public class ProductResponseDTO : ProductModel
@@ -33,5 +34,6 @@ namespace CoffeeHouseAPI.DTOs.Product
 
         public List<ImageResponseDTO> Images { get; set; } = new List<ImageResponseDTO>();
         public CategoryResponseDTO Category { get; set; } = null!;
+        public ImageResponseDTO ImageDefaultNavigation { get; set; } = null!;
     }
 }

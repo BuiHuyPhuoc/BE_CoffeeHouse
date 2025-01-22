@@ -69,13 +69,8 @@ namespace CoffeeHouseAPI.Controllers
                     Status = (int)StatusCodes.Status400BadRequest
                 });
 
-            ProductDTO productDTO = new ProductDTO();
-            productDTO.ProductName = request.ProductName;
-            productDTO.Description = request.Description;
-            productDTO.CategoryId = request.CategoryId;
-            productDTO.IsValid = true;
-
-            var newProduct = _mapper.Map<Product>(productDTO);
+            var newProduct = _mapper.Map<Product>(request);
+            newProduct.Images = new List<Image>();
 
             // Add image to firebase
             List<Image> images = _mapper.Map<List<Image>>(request.Images);
@@ -84,26 +79,32 @@ namespace CoffeeHouseAPI.Controllers
                 images[i].FirebaseImage = url;
             }
 
+            // Add default image to firebase
+            Image imageDefault = _mapper.Map<Image>(request.ImageDefaultNavigation);
+            string urlImageDefault = await _firebaseService.UploadImageAsync(request.ImageDefaultNavigation);
+            imageDefault.FirebaseImage = urlImageDefault;
+
             // Add image to database
             _context.Images.AddRange(images);
+            _context.Images.Add(imageDefault);
             await this.SaveChanges(_context);
 
             // Add product
             newProduct.Images = images;
+            newProduct.ImageDefaultNavigation = imageDefault;
             _context.Products.Add(newProduct);
             await this.SaveChanges(_context);
 
-            // Add product size
-            List<ProductSize> productSizes = _mapper.Map<List<ProductSize>>(request.ProductSizes);
-            foreach (var productSize in productSizes)
-            {
-                productSize.ProductId = newProduct.Id;
-            }
-            _context.ProductSizes.AddRange(productSizes);
-            await this.SaveChanges(_context);
+            //// Add product size
+            //List<ProductSize> productSizes = _mapper.Map<List<ProductSize>>(request.ProductSizes);
+            //foreach (var productSize in productSizes)
+            //{
+            //    productSize.ProductId = newProduct.Id;
+            //}
+            //_context.ProductSizes.AddRange(productSizes);
+            //await this.SaveChanges(_context);
 
-            productDTO = _mapper.Map<ProductDTO>(newProduct);
-            productDTO.Images = new List<ImageRequestDTO>();
+            var productDTO = _mapper.Map<ProductResponseDTO>(newProduct);
             
             return Ok(new APIResponseBase
             {
