@@ -7,11 +7,9 @@ using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseLib.Models;
-using Google.Apis.Auth.OAuth2;
-using Google.Cloud.Storage.V1;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -34,10 +32,14 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpGet]
         [Route("GetProduct")]
-        public async Task<IActionResult> GetProduct()
+        public async Task<IActionResult> GetProduct(int? quantity)
         {
-            var products = await _context.Products.Include(x => x.ProductSizes.Where(x => x.IsValid)).Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.Category).Include(x => x.Images).Where(x => x.IsValid).ToListAsync();
+            var products = await _context.Products.Include(x => x.ProductSizes).Include(x => x.ImageDefaultNavigation)
+                .Include(x => x.Category).Include(x => x.Images).ToListAsync();
+            if (quantity != null)
+            {
+                products = products.Take((int)quantity).ToList();
+            }
             var productDTOs = _mapper.Map<List<ProductResponseDTO>>(products);
             return Ok(new APIResponseBase
             {
@@ -69,13 +71,8 @@ namespace CoffeeHouseAPI.Controllers
                     Status = (int)StatusCodes.Status400BadRequest
                 });
 
-            ProductDTO productDTO = new ProductDTO();
-            productDTO.ProductName = request.ProductName;
-            productDTO.Description = request.Description;
-            productDTO.CategoryId = request.CategoryId;
-            productDTO.IsValid = true;
-
-            var newProduct = _mapper.Map<Product>(productDTO);
+            var newProduct = _mapper.Map<Product>(request);
+            newProduct.Images = new List<Image>();
 
             // Add image to firebase
             List<Image> images = _mapper.Map<List<Image>>(request.Images);
@@ -85,26 +82,32 @@ namespace CoffeeHouseAPI.Controllers
                 images[i].FirebaseImage = url;
             }
 
+            // Add default image to firebase
+            Image imageDefault = _mapper.Map<Image>(request.ImageDefaultNavigation);
+            string urlImageDefault = await _firebaseService.UploadImageAsync(request.ImageDefaultNavigation);
+            imageDefault.FirebaseImage = urlImageDefault;
+
             // Add image to database
             _context.Images.AddRange(images);
+            _context.Images.Add(imageDefault);
             await this.SaveChanges(_context);
 
             // Add product
             newProduct.Images = images;
+            newProduct.ImageDefaultNavigation = imageDefault;
             _context.Products.Add(newProduct);
             await this.SaveChanges(_context);
 
-            // Add product size
-            List<ProductSize> productSizes = _mapper.Map<List<ProductSize>>(request.ProductSizes);
-            foreach (var productSize in productSizes)
-            {
-                productSize.ProductId = newProduct.Id;
-            }
-            _context.ProductSizes.AddRange(productSizes);
-            await this.SaveChanges(_context);
+            //// Add product size
+            //List<ProductSize> productSizes = _mapper.Map<List<ProductSize>>(request.ProductSizes);
+            //foreach (var productSize in productSizes)
+            //{
+            //    productSize.ProductId = newProduct.Id;
+            //}
+            //_context.ProductSizes.AddRange(productSizes);
+            //await this.SaveChanges(_context);
 
-            productDTO = _mapper.Map<ProductDTO>(newProduct);
-            productDTO.Images = new List<ImageRequestDTO>();
+            var productDTO = _mapper.Map<ProductResponseDTO>(newProduct);
 
             return Ok(new APIResponseBase
             {
@@ -116,28 +119,32 @@ namespace CoffeeHouseAPI.Controllers
         }
 
         [HttpGet]
-        [Route("GetDetailProduct")]
-        public async Task<IActionResult> GetDetailProduct(int idProduct)
+        [Route("GetProductDetail")]
+        public IActionResult GetProductDetail(int idProduct)
         {
-            var product = await _context.Products.Include(x => x.ProductSizes.Where(x => x.IsValid)).Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.Category).Include(x => x.Images).Where(x => x.IsValid && x.Id == idProduct).FirstOrDefaultAsync();
-            var productDTO = _mapper.Map<ProductResponseDTO>(product);
+            var product = _context.Products
+                .Include(x => x.Toppings)
+                .Include(x => x.ImageDefaultNavigation)
+                .Include(x => x.ProductDiscounts)
+                .Include(x => x.ProductSizes.OrderBy(y => y.Price))
+                .Include(x => x.Category)
+                .Where(x => x.Id == idProduct).FirstOrDefault();
             if (product == null)
             {
-                return NotFound(new APIResponseBase
+                return BadRequest(new APIResponseBase
                 {
-                    Status = (int)StatusCodes.Status404NotFound,
-                    IsSuccess = false,
+                    IsSuccess = true,
+                    Status = (int)HttpStatusCode.BadRequest,
                     Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
                 });
             }
-
+            var productDTO = _mapper.Map<ProductResponseDTO>(product);
             return Ok(new APIResponseBase
             {
-                Status = (int)StatusCodes.Status200OK,
-                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
                 Value = productDTO,
-                IsSuccess = true
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
             });
         }
     }
