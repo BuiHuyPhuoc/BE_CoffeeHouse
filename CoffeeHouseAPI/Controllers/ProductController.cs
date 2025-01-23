@@ -7,11 +7,9 @@ using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseLib.Models;
-using Google.Apis.Auth.OAuth2;
-using Google.Cloud.Storage.V1;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -34,10 +32,14 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpGet]
         [Route("GetProduct")]
-        public async Task<IActionResult> GetProduct()
+        public async Task<IActionResult> GetProduct(int? quantity)
         {
             var products = await _context.Products.Include(x => x.ProductSizes).Include(x => x.ImageDefaultNavigation)
                 .Include(x => x.Category).Include(x => x.Images).ToListAsync();
+            if (quantity != null)
+            {
+                products = products.Take((int)quantity).ToList();
+            }
             var productDTOs = _mapper.Map<List<ProductResponseDTO>>(products);
             return Ok(new APIResponseBase
             {
@@ -74,7 +76,8 @@ namespace CoffeeHouseAPI.Controllers
 
             // Add image to firebase
             List<Image> images = _mapper.Map<List<Image>>(request.Images);
-            for (int i = 0; i< request.Images.Count; i++) {
+            for (int i = 0; i < request.Images.Count; i++)
+            {
                 string url = await _firebaseService.UploadImageAsync(request.Images[i]);
                 images[i].FirebaseImage = url;
             }
@@ -105,13 +108,43 @@ namespace CoffeeHouseAPI.Controllers
             //await this.SaveChanges(_context);
 
             var productDTO = _mapper.Map<ProductResponseDTO>(newProduct);
-            
+
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
                 Status = (int)StatusCodes.Status200OK,
                 Message = "Add product success",
                 Value = productDTO
+            });
+        }
+
+        [HttpGet]
+        [Route("GetProductDetail")]
+        public IActionResult GetProductDetail(int idProduct)
+        {
+            var product = _context.Products
+                .Include(x => x.Toppings)
+                .Include(x => x.ImageDefaultNavigation)
+                .Include(x => x.ProductDiscounts)
+                .Include(x => x.ProductSizes.OrderBy(y => y.Price))
+                .Include(x => x.Category)
+                .Where(x => x.Id == idProduct).FirstOrDefault();
+            if (product == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = true,
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
+                });
+            }
+            var productDTO = _mapper.Map<ProductResponseDTO>(product);
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Value = productDTO,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
             });
         }
     }
