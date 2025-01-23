@@ -30,6 +30,8 @@ namespace OrderService.Helper
                 .ForMember(s => s.ChildCategory, option => option.MapFrom(s => s.InverseIdParentNavigation)); ;
             CreateMap<CategoryResponseDTO, Category>()
                 .ForMember(s => s.InverseIdParentNavigation, option => option.MapFrom(s => s.ChildCategory));
+            CreateMap<CategoryDTO, Category>();
+            CreateMap<Category, CategoryDTO>();
 
             CreateMap<Product, ProductRequestDTO>();
             CreateMap<ProductRequestDTO, Product>();
