@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace CoffeeHouseLib.Models;
+
+public partial class Cart
+{
+    public int CustomerId { get; set; }
+
+    public int ProductSizeId { get; set; }
+
+    public string? Quantity { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
+
+    public DateTime? UpdatedAt { get; set; }
+
+    public virtual Customer Customer { get; set; } = null!;
+
+    public virtual ProductSize ProductSize { get; set; } = null!;
+}
