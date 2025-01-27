@@ -1,4 +1,5 @@
-﻿using Microsoft.Identity.Client;
+﻿using Google.Apis.Storage.v1.Data;
+using Microsoft.Identity.Client;
 
 namespace CoffeeHouseAPI.Services.Email
 {
@@ -40,6 +41,24 @@ namespace CoffeeHouseAPI.Services.Email
                 </body>
                 </html>
                 ", otpString, expire.ToString("dd/MM/yyyy HH:mm:ss"));
+        }
+
+        public static string SendMailExceptionTemplate(string messageException)
+        {
+            return string.Format(@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <title>Page Title</title>
+                </head>
+                <body>
+                <p><strong>Thông báo từ hệ thống.</strong></p>
+                <p>Lỗi ghi nhận được: {0}</p>
+                <i>Đây là email tự động từ hệ thống Coffee House, vui lòng không phản hồi.</i>
+                <p>Trân trọng cảm ơn đã sử dụng dịch vụ của Coffee House.</p>
+                </body>
+                </html>
+                ", messageException);
         }
     }
 }

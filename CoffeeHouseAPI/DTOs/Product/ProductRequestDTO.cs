@@ -1,6 +1,7 @@
 ﻿using CoffeeHouseAPI.DTOs.Category;
 using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseAPI.DTOs.ProductSize;
+using CoffeeHouseAPI.DTOs.Topping;
 using CoffeeHouseLib.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Query.Expressions.Internal;
 
@@ -37,5 +38,7 @@ namespace CoffeeHouseAPI.DTOs.Product
         public CategoryResponseDTO Category { get; set; } = null!;
         
         public ImageResponseDTO ImageDefaultNavigation { get; set; } = null!;
+
+        public List<ToppingDTO> Toppings { get; set; } = new List<ToppingDTO>();
     }
 }

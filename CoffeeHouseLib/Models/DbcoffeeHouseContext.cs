@@ -19,6 +19,8 @@ public partial class DbcoffeeHouseContext : DbContext
 
     public virtual DbSet<Address> Addresses { get; set; }
 
+    public virtual DbSet<Cart> Carts { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Customer> Customers { get; set; }
@@ -101,6 +103,29 @@ public partial class DbcoffeeHouseContext : DbContext
                 .HasForeignKey(d => d.CustomerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Address__Custome__72C60C4A");
+        });
+
+        modelBuilder.Entity<Cart>(entity =>
+        {
+            entity.HasKey(e => new { e.CustomerId, e.ProductSizeId }).HasName("PK__Cart__AD74BB89212A689E");
+
+            entity.ToTable("Cart");
+
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.Quantity)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.CustomerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Cart__CustomerId__1CBC4616");
+
+            entity.HasOne(d => d.ProductSize).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.ProductSizeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Cart__ProductSiz__1DB06A4F");
         });
 
         modelBuilder.Entity<Category>(entity =>

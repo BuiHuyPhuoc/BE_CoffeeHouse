@@ -18,4 +18,6 @@ public partial class Customer
     public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
 
     public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
+
+    public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
 }

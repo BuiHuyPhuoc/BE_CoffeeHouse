@@ -6,6 +6,7 @@ using CoffeeHouseAPI.DTOs.Category;
 using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseAPI.DTOs.Product;
 using CoffeeHouseAPI.DTOs.ProductSize;
+using CoffeeHouseAPI.DTOs.Topping;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseLib.Models;
 
@@ -54,6 +55,9 @@ namespace OrderService.Helper
 
             CreateMap<AddressDTO, Address>();
             CreateMap<Address, AddressDTO>();
+
+            CreateMap<Topping, ToppingDTO>();
+            CreateMap<ToppingDTO, Topping>();
         }
     }
 }

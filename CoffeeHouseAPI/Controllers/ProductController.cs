@@ -128,7 +128,8 @@ namespace CoffeeHouseAPI.Controllers
                 .Include(x => x.ProductDiscounts)
                 .Include(x => x.ProductSizes.OrderBy(y => y.Price))
                 .Include(x => x.Category)
-                .Where(x => x.Id == idProduct).FirstOrDefault();
+                .Include(x => x.Toppings)
+                .Where(x => x.Id == idProduct).AsNoTracking().FirstOrDefault();
             if (product == null)
             {
                 return BadRequest(new APIResponseBase

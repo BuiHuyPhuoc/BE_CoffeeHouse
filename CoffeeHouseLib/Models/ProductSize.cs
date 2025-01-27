@@ -15,5 +15,7 @@ public partial class ProductSize
 
     public bool IsValid { get; set; }
 
+    public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
+
     public virtual Product Product { get; set; } = null!;
 }
