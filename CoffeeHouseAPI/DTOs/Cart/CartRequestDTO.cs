@@ -1,4 +1,6 @@
-﻿namespace CoffeeHouseAPI.DTOs.Cart
+﻿using CoffeeHouseAPI.DTOs.Topping;
+
+namespace CoffeeHouseAPI.DTOs.Cart
 {
     public class CartRequestDTO
     {
@@ -9,5 +11,7 @@
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        public List<ToppingOrderDTO> Toppings { get; set; } = new List<ToppingOrderDTO>();
     }
 }

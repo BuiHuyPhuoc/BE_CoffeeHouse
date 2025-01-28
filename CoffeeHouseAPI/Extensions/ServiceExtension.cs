@@ -1,4 +1,5 @@
-﻿using CoffeeHouseAPI.Services.Email;
+﻿using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.Services.Email;
 using CoffeeHouseAPI.Services.Firebase;
 using Microsoft.EntityFrameworkCore;
 using OrderService.Helper;
@@ -40,6 +41,8 @@ namespace CoffeeHouseAPI.Extensions
 
             // Register for Firebase Service
             services.AddSingleton<FirebaseService>();
+
+            services.AddScoped<MasterAuth>();
 
         }
     }
