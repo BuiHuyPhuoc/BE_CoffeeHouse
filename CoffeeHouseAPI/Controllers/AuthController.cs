@@ -55,7 +55,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (account.BlockExpire != null && account.BlockExpire > DateTime.UtcNow)
+            if (account.BlockExpire != null && account.BlockExpire > DateTime.Now)
             {
 
                 return BadRequest(new APIResponseBase
@@ -72,7 +72,7 @@ namespace CoffeeHouseAPI.Controllers
                 account.LoginFailed += 1;
                 if (account.LoginFailed % 5 == 0)
                 {
-                    account.BlockExpire = DateTime.UtcNow.AddMinutes(account.LoginFailed);
+                    account.BlockExpire = DateTime.Now.AddMinutes(account.LoginFailed);
                 }
                 await this.SaveChanges(_context);
                 return BadRequest(new APIResponseBase
@@ -103,7 +103,7 @@ namespace CoffeeHouseAPI.Controllers
                     Status = (int)StatusCodes.Status400BadRequest,
                 });
             }
-            LoginResponse loginResponse = this.MappingLoginResponseFromAccountAndCustomer(customer, account);
+            LoginResponse loginResponse = MasterAuth.MappingLoginResponseFromAccountAndCustomer(customer, account);
 
             string stringToken = CreateToken(customer, account);
 
@@ -112,7 +112,7 @@ namespace CoffeeHouseAPI.Controllers
                 var oldRfsToken = _context.RefreshTokens.Find(account.RefreshToken);
                 if (oldRfsToken != null)
                 {
-                     oldRfsToken.Revoke = DateTime.UtcNow;
+                     oldRfsToken.Revoke = DateTime.Now;
                     await this.SaveChanges(_context);
                 }
             }
@@ -239,7 +239,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            account.VerifyTime = DateTime.UtcNow;
+            account.VerifyTime = DateTime.Now;
             await this.SaveChanges(_context);
 
             return Ok(new APIResponseBase
@@ -312,7 +312,7 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             string otp = GENERATE_DATA.GenerateNumber(6);
-            DateTime expire = DateTime.UtcNow.AddMinutes(5);
+            DateTime expire = DateTime.Now.AddMinutes(5);
 
             account.ResetPasswordExpired = expire;
             account.ResetPasswordToken = otp;
@@ -355,7 +355,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (account.ResetPasswordExpired < DateTime.UtcNow)
+            if (account.ResetPasswordExpired < DateTime.Now)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -381,6 +381,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPost]
         [Route("GetNewToken")]
+        [MasterAuth]
         public async Task<IActionResult> GetNewToken(string token)
         {
             Account? account;
@@ -392,9 +393,7 @@ namespace CoffeeHouseAPI.Controllers
 
             var refreshToken = await _context.RefreshTokens.Where(x => x.RefreshToken1 == rfsTokenFromHttp).FirstOrDefaultAsync();
 
-            if (refreshToken == null) return UnauthorizedResponse();
-
-            if (refreshToken.Revoke != null) return UnauthorizedResponse();
+            if (refreshToken == null || refreshToken.Revoke != null) return UnauthorizedResponse();
 
             var accountFromRefreshToken = _context.Accounts.Where(x => x.RefreshToken == refreshToken.RefreshToken1).FirstOrDefault();
 
@@ -449,7 +448,7 @@ namespace CoffeeHouseAPI.Controllers
                     new Claim(ClaimTypes.Name, customer.FullName),
                     new Claim(ClaimTypes.Email, account.Email)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(builder.Configuration["Jwt:Expires"])),
+                Expires = DateTime.Now.AddMinutes(Convert.ToDouble(builder.Configuration["Jwt:Expires"])),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials
@@ -477,8 +476,8 @@ namespace CoffeeHouseAPI.Controllers
             var refreshToken = new RefreshTokenDTO
             {
                 RefreshToken1 = rfsToken,
-                Expire = DateTime.UtcNow.AddDays(1),
-                Created = DateTime.UtcNow
+                Expire = DateTime.Now.AddDays(1),
+                Created = DateTime.Now
             };
 
             return refreshToken;
@@ -516,7 +515,7 @@ namespace CoffeeHouseAPI.Controllers
                 var name = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
                 var email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
 
-                account = _context.Accounts.Where(x => x.Email == email && (x.BlockExpire < DateTime.UtcNow || x.BlockExpire == null)).FirstOrDefault();
+                account = _context.Accounts.Where(x => x.Email == email && (x.BlockExpire < DateTime.Now || x.BlockExpire == null)).FirstOrDefault();
                 customer = _context.Customers.Find(account?.CustomerId ?? -1);
 
             }

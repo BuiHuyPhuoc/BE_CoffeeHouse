@@ -15,6 +15,8 @@ public partial class Cart
 
     public DateTime? UpdatedAt { get; set; }
 
+    public int Id { get; set; }
+
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual ProductSize ProductSize { get; set; } = null!;

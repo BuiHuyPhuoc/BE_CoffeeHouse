@@ -29,7 +29,7 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
             catch (Exception ex)
             {
                 var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
-                var recipients = new List<string> { "buihuyphuoc42@gmail.com"};
+                var recipients = new List<string> { "buihuyphuoc42@gmail.com", "nldangkhoa0712@gmail.com" };
                 var subject = "🚨 System Error Alert";
                 var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(ex.Message);
                 await emailSender.SendEmailAsync(recipients, subject, message, null, null);

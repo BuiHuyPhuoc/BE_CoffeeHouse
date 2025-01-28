@@ -10,4 +10,9 @@
 
         public bool IsValid { get; set; } = true;
     }
+
+    public class ToppingOrderDTO : ToppingDTO
+    {
+        public int Quantity { get; set; } = 1;
+    }
 }

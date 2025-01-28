@@ -22,36 +22,18 @@ namespace CoffeeHouseAPI.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [NonAction]
-        public LoginResponse? GetLoginResponseFromHttpContext()
+        public LoginResponse GetLoginResponseFromHttpContext()
         {
-            var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
-            DbcoffeeHouseContext _context = new DbcoffeeHouseContext();
-            Account? account = _context.Accounts.Where(x => x.Email == emailClaim).FirstOrDefault();
-            if (account == null)
-                return null;
+            // Lấy đối tượng từ HttpContext.Items và cast thành LoginResponse
+            var userInfo = this.HttpContext?.Items["LoginResponse"] as LoginResponse;
 
-            var customer = _context.Customers.Find(account.CustomerId);
-            if (customer == null)
-                return null;
-
-            return MappingLoginResponseFromAccountAndCustomer(customer, account);
-        }
-
-        [ApiExplorerSettings(IgnoreApi = true)]
-        [NonAction]
-        public LoginResponse MappingLoginResponseFromAccountAndCustomer(Customer customer, Account account)
-        {
-            LoginResponse loginResponse = new LoginResponse
+            if (userInfo == null)
             {
-                Id = customer.Id,
-                FullName = customer.FullName,
-                DateOfBirth = customer.DateOfBirth,
-                Phone = customer.Phone,
-                IdRole = customer.IdRole,
-                Email = account.Email,
-            };
-            return loginResponse;
+                return new LoginResponse();
+            }
+            return userInfo;
         }
+
 
         [NonAction]
         public async Task SaveChanges(DbcoffeeHouseContext context)
