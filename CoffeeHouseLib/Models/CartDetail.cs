@@ -11,6 +11,8 @@ public partial class CartDetail
 
     public int? Quantity { get; set; }
 
+    public int Id { get; set; }
+
     public virtual Cart? Cart { get; set; }
 
     public virtual Topping? Topping { get; set; }

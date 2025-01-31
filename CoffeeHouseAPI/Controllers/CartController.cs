@@ -28,27 +28,52 @@ namespace CoffeeHouseAPI.Controllers
         [MasterAuth]
         public async Task<IActionResult> AddToCart([FromBody] CartRequestDTO request)
         {
+            var transaction = await _context.Database.BeginTransactionAsync();
+
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
 
-            var getCart = await _context.Carts
-                                .Where(x => x.CustomerId == loginResponse.Id && x.ProductSizeId == request.ProductSizeId)
-                                .FirstOrDefaultAsync();
+            var getProductSize = _context.ProductSizes.Where(x => x.Id == request.ProductSizeId).FirstOrDefault();
+            if (getProductSize == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Message = "Product is not existed",
+                    IsSuccess = false
+                });
+            }
 
             Cart newCart = new Cart();
             newCart.Quantity = request.Quantity;
-            newCart.ProductSizeId = request.ProductSizeId;
+            newCart.ProductSizeId = getProductSize.Id;
             newCart.CustomerId = loginResponse.Id;
             newCart.CreatedAt = DateTime.Now;
             newCart.UpdatedAt = DateTime.Now;
 
+            await _context.AddAsync(newCart);
             await this.SaveChanges(_context);
 
             List<CartDetail> newCartDetails = new List<CartDetail>();
             foreach (var subCart in request.Toppings)
             {
+                var getTopping = _context.Toppings
+                                .Include(x => x.Products)
+                                .Where(x => x.IsValid && x.Products.Where(x => x.Id == getProductSize.ProductId).Count() != 0 && x.Id == subCart.Id)
+                                .AsNoTracking()
+                                .FirstOrDefault();
+                if (getTopping == null)
+                {
+                    await transaction.RollbackAsync();
+                    return BadRequest(new APIResponseBase
+                    {
+                        Status = (int)HttpStatusCode.BadRequest,
+                        Message = "Topping is not valid for this drink.",
+                        IsSuccess = false
+                    });
+                }
                 CartDetail detail = new CartDetail();
                 detail.CartId = newCart.Id;
-                detail.ToppingId = subCart.Id;
+                detail.ToppingId = getTopping.Id;
                 detail.Quantity = subCart.Quantity;
                 newCartDetails.Add(detail);
             }
@@ -59,6 +84,9 @@ namespace CoffeeHouseAPI.Controllers
                 await this.SaveChanges(_context);
             }
 
+            await transaction.CommitAsync();
+            await transaction.DisposeAsync();
+            
             return Ok(new APIResponseBase
             {
                 Status = (int)HttpStatusCode.OK,

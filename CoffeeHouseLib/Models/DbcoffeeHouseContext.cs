@@ -132,15 +132,15 @@ public partial class DbcoffeeHouseContext : DbContext
 
         modelBuilder.Entity<CartDetail>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("CartDetail");
+            entity.HasKey(e => e.Id).HasName("PK__CartDeta__3214EC07954FB0D8");
 
-            entity.HasOne(d => d.Cart).WithMany()
+            entity.ToTable("CartDetail");
+
+            entity.HasOne(d => d.Cart).WithMany(p => p.CartDetails)
                 .HasForeignKey(d => d.CartId)
                 .HasConstraintName("FK__CartDetai__CartI__2180FB33");
 
-            entity.HasOne(d => d.Topping).WithMany()
+            entity.HasOne(d => d.Topping).WithMany(p => p.CartDetails)
                 .HasForeignKey(d => d.ToppingId)
                 .HasConstraintName("FK__CartDetai__Toppi__208CD6FA");
         });
