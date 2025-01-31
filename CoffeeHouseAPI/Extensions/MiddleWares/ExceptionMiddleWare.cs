@@ -31,7 +31,7 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
                 var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
                 var recipients = new List<string> { "buihuyphuoc42@gmail.com", "nldangkhoa0712@gmail.com" };
                 var subject = "🚨 System Error Alert";
-                var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(ex.Message);
+                var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
                 await emailSender.SendEmailAsync(recipients, subject, message, null, null);
                 httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 httpContext.Response.ContentType = "application/json";

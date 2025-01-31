@@ -13,6 +13,8 @@ public partial class Topping
 
     public bool IsValid { get; set; }
 
+    public virtual ICollection<CartDetail> CartDetails { get; set; } = new List<CartDetail>();
+
     public virtual ICollection<OrderTopping> OrderToppings { get; set; } = new List<OrderTopping>();
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
