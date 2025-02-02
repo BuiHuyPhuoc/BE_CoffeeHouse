@@ -9,7 +9,7 @@ public partial class Cart
 
     public int ProductSizeId { get; set; }
 
-    public string? Quantity { get; set; }
+    public int Quantity { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 

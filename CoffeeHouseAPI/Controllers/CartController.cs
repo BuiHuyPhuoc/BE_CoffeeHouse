@@ -1,5 +1,8 @@
-﻿using CoffeeHouseAPI.DTOs.APIPayload;
+﻿using AutoMapper;
+using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Cart;
+using CoffeeHouseAPI.DTOs.Image;
+using CoffeeHouseAPI.DTOs.Topping;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseLib.Models;
 using Google.Apis.Upload;
@@ -17,10 +20,12 @@ namespace CoffeeHouseAPI.Controllers
     public class CartController : TCHControllerBase
     {
         readonly DbcoffeeHouseContext _context;
+        readonly IMapper _mapper;
 
-        public CartController(DbcoffeeHouseContext context)
+        public CartController(DbcoffeeHouseContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         [HttpPost]
@@ -93,6 +98,43 @@ namespace CoffeeHouseAPI.Controllers
                 Message = "Add to cart success",
                 IsSuccess = true
             });
+        }
+
+        [HttpGet]
+        [Route("GetCart")]
+        [MasterAuth]
+        public async Task<IActionResult> GetCart()
+        {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+            var carts = _context.Carts
+                .Include(x => x.CartDetails).ThenInclude(y => y.Topping)
+                .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.Category)
+                .Where(x => x.CustomerId == loginResponse.Id)
+                .AsNoTracking()
+                .ToList();
+            List<CartResponseDTO> cartResponseDTOs = new List<CartResponseDTO>();
+            foreach(var cart in carts)
+            {
+                CartResponseDTO cartResponseDTO = new CartResponseDTO();
+                cartResponseDTO.CartId = cart.Id;
+                cartResponseDTO.ImageDefaultNavigation = _mapper.Map<ImageResponseDTO>(cart.ProductSize.Product.ImageDefaultNavigation);
+                cartResponseDTO.ProductId = cart.ProductSize.ProductId;
+                cartResponseDTO.ProductName = cart.ProductSize.Product.ProductName;
+                cartResponseDTO.ProductSizeName = cart.ProductSize.Size;
+                cartResponseDTO.Quantity = cart.Quantity;
+                cartResponseDTO.ProductSizeId = cart.ProductSizeId;
+                cartResponseDTO.Price = cart.ProductSize.Price;
+                cartResponseDTO.CategoryName = cart.ProductSize.Product.Category.CategoryName;
+                var cartDetails = cart.CartDetails;
+                List<ToppingDTO> toppingDTOs = new List<ToppingDTO>();
+                foreach(var topping in cartDetails)
+                {
+                    toppingDTOs.Add(_mapper.Map<ToppingDTO>(topping.Topping));
+                }
+                cartResponseDTO.CartDetails = toppingDTOs;
+                cartResponseDTOs.Add(cartResponseDTO);
+            }
+            return Ok(cartResponseDTOs);
         }
 
     }
