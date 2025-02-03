@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Cart;
 using CoffeeHouseAPI.DTOs.Image;
@@ -92,7 +93,7 @@ namespace CoffeeHouseAPI.Controllers
 
             await transaction.CommitAsync();
             await transaction.DisposeAsync();
-            
+
             return Ok(new APIResponseBase
             {
                 Status = (int)HttpStatusCode.OK,
@@ -114,7 +115,7 @@ namespace CoffeeHouseAPI.Controllers
                 .AsNoTracking()
                 .ToListAsync();
             List<CartResponseDTO> cartResponseDTOs = new List<CartResponseDTO>();
-            foreach(var cart in carts)
+            foreach (var cart in carts)
             {
                 CartResponseDTO cartResponseDTO = new CartResponseDTO();
                 cartResponseDTO.CartId = cart.Id;
@@ -128,7 +129,7 @@ namespace CoffeeHouseAPI.Controllers
                 cartResponseDTO.CategoryName = cart.ProductSize.Product.Category.CategoryName;
                 var cartDetails = cart.CartDetails;
                 List<ToppingDTO> toppingDTOs = new List<ToppingDTO>();
-                foreach(var topping in cartDetails)
+                foreach (var topping in cartDetails)
                 {
                     toppingDTOs.Add(_mapper.Map<ToppingDTO>(topping.Topping));
                 }
@@ -141,12 +142,12 @@ namespace CoffeeHouseAPI.Controllers
         [HttpPost]
         [Route("DeleteCart")]
         [MasterAuth]
-        public async Task<IActionResult> DeleteCart(int idCart)
+        public async Task<IActionResult> DeleteCart(int cartId)
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
             var cart = await _context.Carts
                 .Include(x => x.CartDetails)
-                .Where(x => x.Id == idCart && x.CustomerId == loginResponse.Id)
+                .Where(x => x.Id == cartId && x.CustomerId == loginResponse.Id)
                 .FirstOrDefaultAsync();
             if (cart == null)
             {
@@ -168,5 +169,68 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        [HttpPost]
+        [Route("UpdateCart")]
+        [MasterAuth]
+        public async Task<IActionResult> UpdateCart(int cartId, CartRequestDTO updateModel)
+        {
+            var cart = await _context.Carts
+                .Include(x => x.CartDetails)
+                .Where(x => x.Id == cartId)
+                .FirstOrDefaultAsync();
+            if (cart == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
+                    Status = (int)HttpStatusCode.BadRequest,
+                });
+            }
+
+            cart.ProductSizeId = updateModel.ProductSizeId;
+            cart.Quantity = updateModel.Quantity;
+            cart.UpdatedAt = DateTime.Now;
+
+            _context.CartDetails.RemoveRange(cart.CartDetails);
+            await this.SaveChanges(_context);
+            List<CartDetail> newCartDetails = new List<CartDetail>();
+            foreach (var subCart in updateModel.Toppings)
+            {
+                var getTopping = _context.Toppings
+                                .Include(x => x.Products)
+                                .Where(x => x.IsValid && x.Products.Where(x => x.Id == cart.ProductSize.ProductId).Count() != 0 && x.Id == subCart.Id)
+                                .AsNoTracking()
+                                .FirstOrDefault();
+                if (getTopping == null)
+                {
+                    return BadRequest(new APIResponseBase
+                    {
+                        Status = (int)HttpStatusCode.BadRequest,
+                        Message = "Topping is not valid for this drink.",
+                        IsSuccess = false
+                    });
+                }
+                CartDetail detail = new CartDetail();
+                detail.CartId = cart.Id;
+                detail.ToppingId = getTopping.Id;
+                detail.Quantity = subCart.Quantity;
+                newCartDetails.Add(detail);
+            }
+
+            if (newCartDetails.Count > 0)
+            {
+                await _context.CartDetails.AddRangeAsync(newCartDetails);
+            }
+
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
+                Status = (int)HttpStatusCode.OK,
+            });
+        }
     }
 }

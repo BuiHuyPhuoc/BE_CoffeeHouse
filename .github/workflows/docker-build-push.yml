@@ -47,3 +47,12 @@ jobs:
       - name: Push Docker image
         run: |
           docker push phuoc194203/init:v1
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Pull image
+        run:  docker pull phuoc194203/init:v1
+      - name: Run image
+        run: docker run -d 8080:8080 phuoc194203/init:v1
+

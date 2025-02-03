@@ -46,11 +46,11 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            byte[] imageContentByte = Convert.FromBase64String(request.Content);
-
-            Image image = _mapper.Map<Image>(imageContentByte);
-            image.ImageName = image.ImageName ?? DateTime.Now.Millisecond.ToString();
+            // Add to firebase
             string downloadUrl = await _firebaseService.UploadImageAsync(request);
+
+            // Add to database
+            Image image = _mapper.Map<Image>(request);
             image.FirebaseImage = downloadUrl;
             _context.Images.Add(image);
             await this.SaveChanges(_context);
