@@ -54,5 +54,5 @@ jobs:
       - name: Pull image
         run:  docker pull phuoc194203/init:v1
       - name: Run image
-        run: docker run -d 8080:8080 phuoc194203/init:v1
+        run: docker run -p 8080:8080 phuoc194203/init:v1
 
