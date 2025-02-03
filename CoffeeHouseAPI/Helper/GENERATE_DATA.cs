@@ -75,21 +75,21 @@ namespace CoffeeHouseAPI.Helper
 
         private static String CreateData(bool isSuccess)
         {
-            return (isSuccess) ? "Create data success" : "Create data failed";
+            return (isSuccess) ? "Create success" : "Create failed";
         }
 
         private static String GetData(bool isSuccess)
         {
-            return (isSuccess) ? "Get data success" : "There is no item to show";
+            return (isSuccess) ? "Get success" : "There is no item to show";
         }
 
         private static String DeleteData(bool isSuccess) {
-            return (isSuccess) ? "Delete data success" : "Delete data failed";
+            return (isSuccess) ? "Delete success" : "Delete failed";
         }
 
         private static String UpdateData(bool isSuccess)
         {
-            return (isSuccess) ? "Update data success" : "Update data failed";
+            return (isSuccess) ? "Update success" : "Update failed";
         }
 
         public static String API_ACTION_RESPONSE(bool isSuccess, Enum apiAction) {

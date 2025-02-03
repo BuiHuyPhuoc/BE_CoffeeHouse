@@ -3,6 +3,7 @@ using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Cart;
 using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseAPI.DTOs.Topping;
+using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseLib.Models;
 using Google.Apis.Upload;
@@ -106,12 +107,12 @@ namespace CoffeeHouseAPI.Controllers
         public async Task<IActionResult> GetCart()
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
-            var carts = _context.Carts
+            var carts = await _context.Carts
                 .Include(x => x.CartDetails).ThenInclude(y => y.Topping)
                 .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.Category)
                 .Where(x => x.CustomerId == loginResponse.Id)
                 .AsNoTracking()
-                .ToList();
+                .ToListAsync();
             List<CartResponseDTO> cartResponseDTOs = new List<CartResponseDTO>();
             foreach(var cart in carts)
             {
@@ -135,6 +136,36 @@ namespace CoffeeHouseAPI.Controllers
                 cartResponseDTOs.Add(cartResponseDTO);
             }
             return Ok(cartResponseDTOs);
+        }
+
+        [HttpPost]
+        [Route("DeleteCart")]
+        [MasterAuth]
+        public async Task<IActionResult> DeleteCart(int idCart)
+        {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+            var cart = await _context.Carts
+                .Include(x => x.CartDetails)
+                .Where(x => x.Id == idCart && x.CustomerId == loginResponse.Id)
+                .FirstOrDefaultAsync();
+            if (cart == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
+                    Status = (int)HttpStatusCode.BadRequest,
+                });
+            }
+            _context.RemoveRange(cart.CartDetails);
+            _context.Remove(cart);
+            await this.SaveChanges(_context);
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.DELETE),
+                Status = (int)HttpStatusCode.OK,
+            });
         }
 
     }
