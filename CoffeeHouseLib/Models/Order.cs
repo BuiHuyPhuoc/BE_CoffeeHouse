@@ -7,7 +7,7 @@ public partial class Order
 {
     public int Id { get; set; }
 
-    public int AccountId { get; set; }
+    public int CustomerId { get; set; }
 
     public DateTime OrderDate { get; set; }
 
@@ -15,7 +15,7 @@ public partial class Order
 
     public int? VoucherId { get; set; }
 
-    public virtual Account Account { get; set; } = null!;
+    public virtual Customer Customer { get; set; } = null!;
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 

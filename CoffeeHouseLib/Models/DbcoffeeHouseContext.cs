@@ -67,11 +67,9 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("Account");
 
-            entity.HasIndex(e => e.Id, "UQ__Account__3214EC062D567715").IsUnique();
-
+            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AccessToken).HasMaxLength(255);
             entity.Property(e => e.BlockExpire).HasColumnType("datetime");
-            entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.RefreshToken).HasMaxLength(255);
             entity.Property(e => e.ResetPasswordExpired).HasColumnType("datetime");
@@ -79,9 +77,8 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.Property(e => e.VerifyTime).HasColumnType("datetime");
             entity.Property(e => e.VerifyToken).HasMaxLength(255);
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Accounts)
-                .HasForeignKey(d => d.CustomerId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+            entity.HasOne(d => d.IdNavigation).WithOne(p => p.Account)
+                .HasForeignKey<Account>(d => d.Id)
                 .HasConstraintName("FK__Account__Custome__71D1E811");
 
             entity.HasOne(d => d.RefreshTokenNavigation).WithMany(p => p.Accounts)
@@ -114,9 +111,6 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.ToTable("Cart");
 
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.Property(e => e.Quantity)
-                .HasMaxLength(255)
-                .IsUnicode(false);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Carts)
@@ -231,8 +225,8 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.Property(e => e.OrderDate).HasColumnType("datetime");
             entity.Property(e => e.Status).HasMaxLength(255);
 
-            entity.HasOne(d => d.Account).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.AccountId)
+            entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.CustomerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Order__AccountId__74AE54BC");
 

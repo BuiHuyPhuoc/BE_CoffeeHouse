@@ -5,13 +5,9 @@ namespace CoffeeHouseLib.Models;
 
 public partial class Account
 {
-    public int Id { get; set; }
-
-    public string Email { get; set; } = null!;
-
     public string Password { get; set; } = null!;
 
-    public int CustomerId { get; set; }
+    public int Id { get; set; }
 
     public string? VerifyToken { get; set; }
 
@@ -29,9 +25,7 @@ public partial class Account
 
     public DateTime? BlockExpire { get; set; }
 
-    public virtual Customer Customer { get; set; } = null!;
-
-    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    public virtual Customer IdNavigation { get; set; } = null!;
 
     public virtual RefreshToken? RefreshTokenNavigation { get; set; }
 }

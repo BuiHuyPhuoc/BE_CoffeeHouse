@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Principal;
@@ -32,6 +33,8 @@ namespace CoffeeHouseAPI.Controllers
         private readonly DbcoffeeHouseContext _context;
         private readonly IEmailSender _email;
         private readonly IMapper _mapper;
+        private readonly string verifyEndpoint = "/verify?query=";
+
         public AuthController(DbcoffeeHouseContext context, IEmailSender email, IMapper mapper)
         {
             _mapper = mapper;
@@ -43,9 +46,12 @@ namespace CoffeeHouseAPI.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login([FromBody] LoginResquest request)
         {
-            var account = await _context.Accounts.Where(x => x.Email == request.Email).FirstOrDefaultAsync();
+            var customer = await _context.Customers
+                            .Include(x => x.Account)
+                            .Where(x => x.Email == request.Email)
+                            .FirstOrDefaultAsync();
 
-            if (account == null)
+            if (customer == null || customer.Account == null)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -55,24 +61,24 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (account.BlockExpire != null && account.BlockExpire > DateTime.Now)
+            if (customer.Account.BlockExpire != null && customer.Account.BlockExpire > DateTime.Now)
             {
 
                 return BadRequest(new APIResponseBase
                 {
                     IsSuccess = false,
-                    Message = $"Your account is blocked. Please try after {((DateTime)account.BlockExpire).ToString("HH:mm:ss")}.",
+                    Message = $"Your account is blocked. Please try after {((DateTime)customer.Account!.BlockExpire).ToString("HH:mm:ss")}.",
                     Status = (int)StatusCodes.Status400BadRequest,
                 });
             }
 
 
-            if (account.Password != request.Password)
+            if (customer.Account.Password != request.Password)
             {
-                account.LoginFailed += 1;
-                if (account.LoginFailed % 5 == 0)
+                customer.Account.LoginFailed += 1;
+                if (customer.Account.LoginFailed % 5 == 0)
                 {
-                    account.BlockExpire = DateTime.Now.AddMinutes(account.LoginFailed);
+                    customer.Account.BlockExpire = DateTime.Now.AddMinutes(customer.Account.LoginFailed);
                 }
                 await this.SaveChanges(_context);
                 return BadRequest(new APIResponseBase
@@ -83,7 +89,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (account.VerifyTime == null)
+            if (customer.Account.VerifyTime == null)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -93,23 +99,13 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            var customer = _context.Customers.Find(account.CustomerId);
-            if (customer == null)
-            {
-                return BadRequest(new APIResponseBase
-                {
-                    IsSuccess = false,
-                    Message = "Login failed, please try again",
-                    Status = (int)StatusCodes.Status400BadRequest,
-                });
-            }
-            LoginResponse loginResponse = MasterAuth.MappingLoginResponseFromAccountAndCustomer(customer, account);
+            LoginResponse loginResponse = MasterAuth.MappingLoginResponseFromAccountAndCustomer(customer);
 
-            string stringToken = CreateToken(customer, account);
+            string stringToken = CreateToken(customer);
 
-            if (account.RefreshToken != null)
+            if (customer.Account.RefreshToken != null)
             {
-                var oldRfsToken = _context.RefreshTokens.Find(account.RefreshToken);
+                var oldRfsToken = _context.RefreshTokens.Find(customer.Account.RefreshToken);
                 if (oldRfsToken != null)
                 {
                      oldRfsToken.Revoke = DateTime.Now;
@@ -121,8 +117,8 @@ namespace CoffeeHouseAPI.Controllers
             RefreshToken refreshToken = _mapper.Map<RefreshToken>(refreshTokenDTO);
             _context.RefreshTokens.Add(refreshToken);
             await this.SaveChanges(_context);
-            account.RefreshToken = refreshToken.RefreshToken1;
-            account.LoginFailed = 0;
+            customer.Account.RefreshToken = refreshToken.RefreshToken1;
+            customer.Account.LoginFailed = 0;
             await this.SaveChanges(_context);
 
             var options = new CookieOptions
@@ -152,9 +148,9 @@ namespace CoffeeHouseAPI.Controllers
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] UserAccountRequest request)
         {
-            Account? account = await _context.Accounts.Where(x => x.Email == request.Email).FirstOrDefaultAsync();
+            Customer? customer = await _context.Customers.Where(x => x.Email == request.Email).FirstOrDefaultAsync();
 
-            if (account != null)
+            if (customer != null)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -164,37 +160,37 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            Customer customer = new Customer
+            Customer newCustomer = new Customer
             {
+                Email = request.Email,
                 FullName = request.FullName,
                 Phone = request.Phone,
                 DateOfBirth = request.DateOfBirth,
                 IdRole = request.IdRole,
             };
 
-            await _context.Customers.AddAsync(customer);
+            await _context.Customers.AddAsync(newCustomer);
             await this.SaveChanges(_context);
 
             string newOtp = GENERATE_DATA.GenerateString(64);
 
             var builder = WebApplication.CreateBuilder();
             string frontEndDomain = builder.Configuration["FrontendDomain"] ?? string.Empty;
-            string urlVerify = frontEndDomain + "/verify?query=" + newOtp;
+            string urlVerify = frontEndDomain + verifyEndpoint + newOtp;
             
-            account = new Account
+            Account newAccount = new Account
             {
-                Email = request.Email,
                 Password = request.Password,
                 VerifyToken = newOtp,
                 LoginFailed = 0,
-                CustomerId = customer.Id,
+                Id = newCustomer.Id,
             };
 
-            await _context.Accounts.AddAsync(account);
+            await _context.Accounts.AddAsync(newAccount);
             await this.SaveChanges(_context);
 
             string subject = "Xác nhận tài khoản";
-            await _email.SendEmailAsync(account.Email, subject, EMAIL_TEMPLATE.SendOtpTemplate(urlVerify));
+            await _email.SendEmailAsync(newCustomer.Email, subject, EMAIL_TEMPLATE.SendOtpTemplate(urlVerify));
 
             return Ok(new APIResponseBase
             {
@@ -208,7 +204,10 @@ namespace CoffeeHouseAPI.Controllers
         [Route("VerifyAccount")]
         public async Task<IActionResult> VerifyAccount([FromBody] VerifyAccountRequest request)
         {
-            var account = await _context.Accounts.Where(x => x.VerifyToken == request.Otp).FirstOrDefaultAsync();
+            var account = await _context.Accounts
+                            .Include(x => x.IdNavigation)
+                            .Where(x => x.VerifyToken == request.Otp)
+                            .FirstOrDefaultAsync();
             if (account == null)
             {
                 return BadRequest(new APIResponseBase
@@ -247,7 +246,7 @@ namespace CoffeeHouseAPI.Controllers
                 IsSuccess = true,
                 Message = "Verify account success.",
                 Status = (int)StatusCodes.Status200OK,
-                Value = account.Email
+                Value = account.IdNavigation.Email,
             });
         }
 
@@ -255,8 +254,11 @@ namespace CoffeeHouseAPI.Controllers
         [Route("ResendOtp")]
         public async Task<IActionResult> ResendOtp([FromBody] string email)
         {
-            var account = await _context.Accounts.Where(x => x.Email == email).FirstOrDefaultAsync();
-            if (account == null)
+            var customer = await _context.Customers
+                                .Include(x => x.Account)
+                                .Where(x => x.Email == email)
+                                .FirstOrDefaultAsync();
+            if (customer == null || customer.Account == null)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -266,7 +268,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (account.VerifyTime != null)
+            if (customer.Account.VerifyTime != null)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -280,13 +282,13 @@ namespace CoffeeHouseAPI.Controllers
 
             var builder = WebApplication.CreateBuilder();
             string frontEndDomain = builder.Configuration["FrontendDomain"] ?? string.Empty;
-            string urlVerify = frontEndDomain + "/Verify?token=" + newOtp;
+            string urlVerify = frontEndDomain + verifyEndpoint + newOtp;
             
-            account.VerifyToken = newOtp;
+            customer.Account.VerifyToken = newOtp;
             await this.SaveChanges(_context);
 
             string subject = "Xác nhận tài khoản";
-            await _email.SendEmailAsync(account.Email, subject, EMAIL_TEMPLATE.SendOtpTemplate(urlVerify));
+            await _email.SendEmailAsync(customer.Email, subject, EMAIL_TEMPLATE.SendOtpTemplate(urlVerify));
 
             return Ok(new APIResponseBase
             {
@@ -300,7 +302,7 @@ namespace CoffeeHouseAPI.Controllers
         [Route("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] string email)
         {
-            var account = await _context.Accounts.Where(x => x.Email == email).FirstOrDefaultAsync();
+            var account = await _context.Accounts.Where(x => x.IdNavigation.Email == email).FirstOrDefaultAsync();
             if (account == null)
             {
                 return BadRequest(new APIResponseBase
@@ -334,7 +336,7 @@ namespace CoffeeHouseAPI.Controllers
         [Route("SetNewPassword")]
         public async Task<IActionResult> SetNewPassword([FromBody] ForgotPasswordRequest request)
         {
-            var account = await _context.Accounts.Where(x => x.Email == request.Email).FirstOrDefaultAsync();
+            var account = await _context.Accounts.Where(x => x.IdNavigation.Email == request.Email).FirstOrDefaultAsync();
             if (account == null)
             {
                 return BadRequest(new APIResponseBase
@@ -395,17 +397,20 @@ namespace CoffeeHouseAPI.Controllers
 
             if (refreshToken == null || refreshToken.Revoke != null) return UnauthorizedResponse();
 
-            var accountFromRefreshToken = _context.Accounts.Where(x => x.RefreshToken == refreshToken.RefreshToken1).FirstOrDefault();
+            var accountFromRefreshToken = _context.Accounts
+                                        .Include(x => x.IdNavigation)
+                                        .Where(x => x.RefreshToken == refreshToken.RefreshToken1)
+                                        .FirstOrDefault();
 
             if (accountFromRefreshToken == null) return UnauthorizedResponse();
 
             GetAccountFromJwtToken(token, out customer, out account);
 
-            if (account == null || customer == null) return UnauthorizedResponse();
+            if (customer == null || account == null) return UnauthorizedResponse();
 
-            if (account.Email != accountFromRefreshToken.Email) return UnauthorizedResponse();
+            if (customer.Email != accountFromRefreshToken.IdNavigation.Email) return UnauthorizedResponse();
 
-            var newToken = CreateToken(customer, account);
+            var newToken = CreateToken(customer);
 
             RefreshTokenDTO refreshTokenDTO = GenerateRefreshToken();
             refreshToken.RefreshToken1 = refreshTokenDTO.RefreshToken1;
@@ -433,7 +438,7 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
-        private string CreateToken(Customer customer, Account account)
+        private string CreateToken(Customer customer)
         {
             var builder = WebApplication.CreateBuilder();
             var issuer = builder.Configuration["Jwt:Issuer"];
@@ -446,7 +451,7 @@ namespace CoffeeHouseAPI.Controllers
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.Name, customer.FullName),
-                    new Claim(ClaimTypes.Email, account.Email)
+                    new Claim(ClaimTypes.Email, customer.Email)
                 }),
                 Expires = DateTime.Now.AddMinutes(Convert.ToDouble(builder.Configuration["Jwt:Expires"])),
                 Issuer = issuer,
@@ -515,9 +520,8 @@ namespace CoffeeHouseAPI.Controllers
                 var name = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
                 var email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
 
-                account = _context.Accounts.Where(x => x.Email == email && (x.BlockExpire < DateTime.Now || x.BlockExpire == null)).FirstOrDefault();
-                customer = _context.Customers.Find(account?.CustomerId ?? -1);
-
+                customer = _context.Customers.Include(x => x.Account).Where(x => x.Email == email).FirstOrDefault();
+                account = (customer != null) ? customer.Account : null;
             }
             catch (SecurityTokenException)
             {
