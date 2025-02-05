@@ -50,23 +50,23 @@ namespace CoffeeHouseAPI.Helper
             }
 
             DbcoffeeHouseContext _context = new DbcoffeeHouseContext();
-            var account = await _context.Accounts.Where(x => x.Email == email && (x.BlockExpire < DateTime.UtcNow || x.BlockExpire == null)).FirstOrDefaultAsync();
+            var account = await _context.Accounts.Where(x => x.IdNavigation.Email == email && (x.BlockExpire < DateTime.UtcNow || x.BlockExpire == null)).FirstOrDefaultAsync();
             if (account == null)
             {
                 context.Result = new UnauthorizedResult();
                 return;
             }
 
-            var customer = _context.Customers.Where(x => x.Id == account.CustomerId).FirstOrDefault()
+            var customer = _context.Customers.Where(x => x.Id == account.Id).FirstOrDefault()
                 ?? new Customer();
 
-            LoginResponse loginResponse = MappingLoginResponseFromAccountAndCustomer(customer, account);
+            LoginResponse loginResponse = MappingLoginResponseFromAccountAndCustomer(customer);
 
             context.HttpContext.Items["LoginResponse"] = loginResponse;
             return;
         }
 
-        public static LoginResponse MappingLoginResponseFromAccountAndCustomer(Customer customer, Account account)
+        public static LoginResponse MappingLoginResponseFromAccountAndCustomer(Customer customer)
         {
             LoginResponse loginResponse = new LoginResponse
             {
@@ -75,7 +75,7 @@ namespace CoffeeHouseAPI.Helper
                 DateOfBirth = customer.DateOfBirth,
                 Phone = customer.Phone,
                 IdRole = customer.IdRole,
-                Email = account.Email,
+                Email = customer.Email,
             };
             return loginResponse;
         }
