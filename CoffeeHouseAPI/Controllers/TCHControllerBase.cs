@@ -49,7 +49,7 @@ namespace CoffeeHouseAPI.Controllers
             //var request = HttpContext.Request;
             //var serverUrl = $"{request.Scheme}://{request.Host}{request.PathBase}";
             //return serverUrl;
-            return "https://localhost:3002";
+            return "https://the-coffee-house-git-master-nguyn-le-djang-khoas-projects.vercel.app";
         }
     }
 }
