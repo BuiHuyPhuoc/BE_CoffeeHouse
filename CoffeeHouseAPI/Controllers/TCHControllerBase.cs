@@ -46,9 +46,10 @@ namespace CoffeeHouseAPI.Controllers
         [NonAction]
         public string GetUrlPort()
         {
-            var request = HttpContext.Request;
-            var serverUrl = $"{request.Scheme}://{request.Host}{request.PathBase}";
-            return serverUrl;
+            //var request = HttpContext.Request;
+            //var serverUrl = $"{request.Scheme}://{request.Host}{request.PathBase}";
+            //return serverUrl;
+            return "https://localhost:3002";
         }
     }
 }
