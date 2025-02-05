@@ -13,7 +13,7 @@ namespace CoffeeHouseAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [MasterAuth]
     public class AddressController : TCHControllerBase
     {
         readonly DbcoffeeHouseContext _context;
@@ -30,16 +30,6 @@ namespace CoffeeHouseAPI.Controllers
         public ActionResult GetAddress()
         {
             var loginResponse = GetLoginResponseFromHttpContext();
-
-            if (loginResponse == null)
-            {
-                return Unauthorized(new APIResponseBase
-                {
-                    IsSuccess = false,
-                    Status = StatusCodes.Status401Unauthorized,
-                    Message = GENERATE_DATA.STATUSCODE_MESSAGE(StatusCodes.Status401Unauthorized)
-                });
-            }
 
             var addresses = _context.Addresses.Where(x => x.CustomerId == loginResponse.Id).ToList();
 
@@ -60,19 +50,10 @@ namespace CoffeeHouseAPI.Controllers
         {
             var loginResponse = GetLoginResponseFromHttpContext();
 
-            if (loginResponse == null)
-            {
-                return Unauthorized(new APIResponseBase
-                {
-                    IsSuccess = false,
-                    Status = StatusCodes.Status401Unauthorized,
-                    Message = GENERATE_DATA.STATUSCODE_MESSAGE(StatusCodes.Status401Unauthorized)
-                });
-            }
-
             request.CustomerId = loginResponse.Id;
 
             var currentDefaultAddress = await _context.Addresses.Where(x => x.CustomerId == loginResponse.Id && x.IsDefault).FirstOrDefaultAsync();
+            
             if (currentDefaultAddress != null && request.IsDefault == true) {
                 // Set old address is not default
                 currentDefaultAddress.IsDefault = false;

@@ -28,19 +28,26 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
             }
             catch (Exception ex)
             {
-                var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
-                var recipients = new List<string> { "buihuyphuoc42@gmail.com", "nldangkhoa0712@gmail.com" };
-                var subject = "🚨 System Error Alert";
-                var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
-                await emailSender.SendEmailAsync(recipients, subject, message, null, null);
-                httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                httpContext.Response.ContentType = "application/json";
-                await httpContext.Response.WriteAsJsonAsync(new
+                try
                 {
-                    StatusCode = (int)HttpStatusCode.InternalServerError,
-                    Message = "Internal Error.",
-                    Detail = "An unexpected error occurred.",
-                });
+                    var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
+                    var recipients = new List<string> { "buihuyphuoc42@gmail.com", "nldangkhoa0712@gmail.com" };
+                    var subject = "🚨 System Error Alert";
+                    var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
+                    await emailSender.SendEmailAsync(recipients, subject, message, null, null);
+                }
+                finally
+                {
+                    httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    httpContext.Response.ContentType = "application/json";
+                    await httpContext.Response.WriteAsJsonAsync(new
+                    {
+                        StatusCode = (int)HttpStatusCode.InternalServerError,
+                        Message = "Internal Error.",
+                        Detail = "An unexpected error occurred.",
+                    });
+                }
+
             }
 
         }

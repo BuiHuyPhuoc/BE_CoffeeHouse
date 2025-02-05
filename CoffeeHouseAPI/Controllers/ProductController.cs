@@ -148,5 +148,12 @@ namespace CoffeeHouseAPI.Controllers
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
             });
         }
+
+        //[HttpGet]
+        //[Route("GetProductHomePage")]
+        //public async Task<IActionResult> GetProductHomePage()
+        //{
+            
+        //}
     }
 }
