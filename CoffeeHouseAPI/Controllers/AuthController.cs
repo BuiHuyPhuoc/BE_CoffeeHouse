@@ -176,7 +176,7 @@ namespace CoffeeHouseAPI.Controllers
 
             var builder = WebApplication.CreateBuilder();
             string frontEndDomain = builder.Configuration["FrontendDomain"] ?? string.Empty;
-            string urlVerify = frontEndDomain + verifyEndpoint + newOtp;
+            string urlVerify = this.GetUrlPort() + verifyEndpoint + newOtp;
             
             Account newAccount = new Account
             {
