@@ -136,7 +136,13 @@ namespace CoffeeHouseAPI.Controllers
                 cartResponseDTO.CartDetails = toppingDTOs;
                 cartResponseDTOs.Add(cartResponseDTO);
             }
-            return Ok(cartResponseDTOs);
+            return Ok(new APIResponseBase
+            {
+                Value = cartResponseDTOs,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Status = (int)HttpStatusCode.OK,
+                IsSuccess = true
+            });
         }
 
         [HttpPost]
