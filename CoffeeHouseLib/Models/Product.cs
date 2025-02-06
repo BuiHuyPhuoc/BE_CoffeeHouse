@@ -17,6 +17,8 @@ public partial class Product
 
     public int? ImageDefault { get; set; }
 
+    public string? Description2 { get; set; }
+
     public virtual Category Category { get; set; } = null!;
 
     public virtual Image? ImageDefaultNavigation { get; set; }

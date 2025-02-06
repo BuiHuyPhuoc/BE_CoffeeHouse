@@ -51,7 +51,7 @@ namespace CoffeeHouseAPI
             app.UseSwagger();
             app.UseSwaggerUI();
 
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
 
             // Use cors
             app.UseCors("AllowAll");
