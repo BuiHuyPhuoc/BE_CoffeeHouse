@@ -7,8 +7,10 @@ using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseLib.Models;
+using Google.Apis.Upload;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.ML;
 using System.Net;
 
 namespace CoffeeHouseAPI.Controllers
@@ -153,7 +155,88 @@ namespace CoffeeHouseAPI.Controllers
         //[Route("GetProductHomePage")]
         //public async Task<IActionResult> GetProductHomePage()
         //{
-            
+
         //}
+
+        [HttpGet]
+        [Route("GetRecommendProduct")]
+        public async Task<IActionResult> GetRecommendProduct(int productId)
+        {
+            var exampleProduct = _context.Products.Where(x => x.Id == productId && x.IsValid).FirstOrDefault();
+            if (exampleProduct == null)
+            {
+                return BadRequest(
+                    new APIResponseBase
+                    {
+                        IsSuccess = false
+                        ,
+                        Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
+                        Status = (int)HttpStatusCode.BadRequest
+                    }
+                );
+            }
+
+            var products = await _context.Products
+                .Include(x => x.ImageDefaultNavigation)
+                .Include(x => x.ProductSizes)
+                .Include(x => x.Category)
+                .Where(x => x.IsValid == true && x.Description2 != null)
+                .ToListAsync();
+
+            var mlContext = new MLContext();
+
+            var data = mlContext.Data.LoadFromEnumerable(products.Select(d => new { Description2 = d.Description2 }));
+
+            var pipeline = mlContext.Transforms.Text.FeaturizeText("Feature", "Description2");
+
+            var model = pipeline.Fit(data);
+            var transformedData = model.Transform(data);
+
+            var features = mlContext.Data.CreateEnumerable<ProductFeature>(transformedData, reuseRowObject: false).ToList();
+
+            var favoriteFeatures = features[products.FindIndex(d => d.Id == exampleProduct.Id)].Feature;
+
+            var similarities = products.Select((d, index) => new
+            {
+                Product = d,
+                Similarity = CosineSimilarity(favoriteFeatures, features[index].Feature)
+            })
+            .Where(x => x.Product.Id != exampleProduct.Id && x.Similarity >= 0.3)
+            .OrderByDescending(x => x.Similarity)
+            .Take(3)
+            .ToList();
+
+            List<Product> result = new List<Product>();
+            foreach (var item in similarities)
+            {
+                result.Add(item.Product);
+            }
+
+            var resultDTO = _mapper.Map<List<ProductResponseDTO>>(result);
+            return Ok(new APIResponseBase
+                {
+                    Value = resultDTO,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                    Status = (int)HttpStatusCode.OK,
+                    IsSuccess = true
+                }
+            );
+        }
+
+        private double CosineSimilarity(float[] vectorA, float[] vectorB)
+        {
+            double dotProduct = 0.0;
+            double magnitudeA = 0.0;
+            double magnitudeB = 0.0;
+
+            for (int i = 0; i < vectorA.Length; i++)
+            {
+                dotProduct += vectorA[i] * vectorB[i];
+                magnitudeA += Math.Pow(vectorA[i], 2);
+                magnitudeB += Math.Pow(vectorB[i], 2);
+            }
+
+            return dotProduct / (Math.Sqrt(magnitudeA) * Math.Sqrt(magnitudeB) + 1e-10);
+        }
     }
 }
