@@ -75,5 +75,54 @@ namespace CoffeeHouseAPI.Controllers
                 IsSuccess = true
             });
         }
+        [HttpPost]
+        [Route("UpdateAddress")]
+        public async Task<IActionResult> UpdateAddress(int addressId, [FromBody]AddressDTO request)
+        {
+            var address = await _context.Addresses.Where(x => x.Id == addressId).FirstOrDefaultAsync();
+            var loginResponse = this.GetLoginResponseFromHttpContext();
+
+            if (address == null || address.CustomerId != loginResponse.Id)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
+                });
+            }
+
+            address.Address1 = request.Address;
+            address.CustomerId = loginResponse.Id;
+
+            if (address.IsDefault == true && request.IsDefault == false)
+            {
+                var nonDefaultAddress = _context.Addresses.Where(x => x.IsDefault == false && x.CustomerId == loginResponse.Id).FirstOrDefault();
+
+                if (nonDefaultAddress == null) throw new Exception();
+
+                nonDefaultAddress.IsDefault = true;
+                await this.SaveChanges(_context);
+            }
+            else if (address.IsDefault == false && request.IsDefault == true) { 
+                var defaultAddress = _context.Addresses.Where(x => x.IsDefault == true && x.CustomerId == loginResponse.Id).FirstOrDefault();
+
+                if (defaultAddress != null)
+                {
+                    defaultAddress.IsDefault = false;
+                    await this.SaveChanges(_context);
+                }
+            }
+
+            address.IsDefault = request.IsDefault;
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
+            });
+        }
     }
 }
