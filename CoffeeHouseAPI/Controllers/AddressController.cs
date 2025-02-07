@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -53,8 +54,9 @@ namespace CoffeeHouseAPI.Controllers
             request.CustomerId = loginResponse.Id;
 
             var currentDefaultAddress = await _context.Addresses.Where(x => x.CustomerId == loginResponse.Id && x.IsDefault).FirstOrDefaultAsync();
-            
-            if (currentDefaultAddress != null && request.IsDefault == true) {
+
+            if (currentDefaultAddress != null && request.IsDefault == true)
+            {
                 // Set old address is not default
                 currentDefaultAddress.IsDefault = false;
                 await this.SaveChanges(_context);
@@ -73,6 +75,92 @@ namespace CoffeeHouseAPI.Controllers
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
                 Value = addressDTO,
                 IsSuccess = true
+            });
+        }
+
+        [HttpPost]
+        [Route("UpdateAddress")]
+        public async Task<IActionResult> UpdateAddress(int addressId, [FromBody]AddressDTO request)
+        {
+            var address = await _context.Addresses.Where(x => x.Id == addressId).FirstOrDefaultAsync();
+            var loginResponse = this.GetLoginResponseFromHttpContext();
+
+            if (address == null || address.CustomerId != loginResponse.Id)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
+                });
+            }
+
+            address.Address1 = request.Address;
+            address.CustomerId = loginResponse.Id;
+
+            if (address.IsDefault == true && request.IsDefault == false)
+            {
+                var nonDefaultAddress = _context.Addresses.Where(x => x.IsDefault == false && x.CustomerId == loginResponse.Id).FirstOrDefault();
+
+                if (nonDefaultAddress == null) throw new Exception();
+
+                nonDefaultAddress.IsDefault = true;
+                await this.SaveChanges(_context);
+            }
+            else if (address.IsDefault == false && request.IsDefault == true) { 
+                var defaultAddress = _context.Addresses.Where(x => x.IsDefault == true && x.CustomerId == loginResponse.Id).FirstOrDefault();
+
+                if (defaultAddress != null)
+                {
+                    defaultAddress.IsDefault = false;
+                    await this.SaveChanges(_context);
+                }
+            }
+
+            address.IsDefault = request.IsDefault;
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
+            });
+        }
+
+        [HttpPost]
+        [Route("DeleteAddress")]
+        public async Task<IActionResult> DeleteAddress(int addressId)
+        {
+            var loginResponse = this.GetLoginResponseFromHttpContext();
+            var address = _context.Addresses.Where(x => x.Id == addressId && loginResponse.Id == x.CustomerId).FirstOrDefault();
+            
+            if (address == null) {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
+                });
+            }
+
+            if (address.IsDefault)
+            {
+                var nonDefaultAddress = _context.Addresses.Where(x => x.IsDefault == false && x.CustomerId == loginResponse.Id).FirstOrDefault();
+
+                if (nonDefaultAddress == null) throw new Exception();
+
+                nonDefaultAddress.IsDefault = true;
+                await this.SaveChanges(_context);
+            }
+
+            _context.Remove(address);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.DELETE)
             });
         }
     }
