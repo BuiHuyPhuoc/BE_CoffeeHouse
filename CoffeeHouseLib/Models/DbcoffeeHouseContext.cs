@@ -313,6 +313,7 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.HasIndex(e => e.Id, "UQ__Product__3214EC0614DAD9E1").IsUnique();
 
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.IsValid).HasDefaultValue(true);
             entity.Property(e => e.ProductName).HasMaxLength(255);
 
