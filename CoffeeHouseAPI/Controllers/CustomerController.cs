@@ -7,6 +7,7 @@ using Google.Apis.Upload;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -41,6 +42,7 @@ namespace CoffeeHouseAPI.Controllers
                 IsSuccess = true,
                 Value = userInformationResponseDTO,
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Status = (int)HttpStatusCode.OK
             });
         }
 
@@ -67,6 +69,8 @@ namespace CoffeeHouseAPI.Controllers
             {
                 IsSuccess = true,
                 Value = loginResponse,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
             });
         }
     }

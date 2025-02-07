@@ -53,8 +53,10 @@ namespace OrderService.Helper
             CreateMap<ProductSize, ProductSizeRequestDTO>();
             CreateMap<ProductSizeRequestDTO, ProductSize>();
 
-            CreateMap<AddressDTO, Address>();
-            CreateMap<Address, AddressDTO>();
+            CreateMap<AddressDTO, Address>()
+                .ForMember(x => x.Address1, options => options.MapFrom(y => y.Address));
+            CreateMap<Address, AddressDTO>()
+                .ForMember(x => x.Address, options => options.MapFrom(y => y.Address1));
 
             CreateMap<Topping, ToppingDTO>();
             CreateMap<ToppingDTO, Topping>();
