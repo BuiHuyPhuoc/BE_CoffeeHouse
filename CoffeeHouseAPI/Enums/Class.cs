@@ -7,4 +7,13 @@
         PUT = 2,
         DELETE = 3,
     }
+
+    public enum ORDER_STATUS
+    {
+        BOOKED,
+        CANCELED,
+        DELIVERED,
+        DELIVERING,
+        INPROCESSING
+    }
 }

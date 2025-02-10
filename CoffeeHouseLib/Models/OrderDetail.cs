@@ -15,9 +15,11 @@ public partial class OrderDetail
 
     public int? DiscountId { get; set; }
 
+    public int? Quantity { get; set; }
+
     public virtual Discount? Discount { get; set; }
 
     public virtual Order Order { get; set; } = null!;
 
-    public virtual OrderTopping? OrderTopping { get; set; }
+    public virtual ProductSize ProductSize { get; set; } = null!;
 }

@@ -11,8 +11,6 @@ public partial class Order
 
     public DateTime OrderDate { get; set; }
 
-    public string Status { get; set; } = null!;
-
     public int? VoucherId { get; set; }
 
     public virtual Customer Customer { get; set; } = null!;

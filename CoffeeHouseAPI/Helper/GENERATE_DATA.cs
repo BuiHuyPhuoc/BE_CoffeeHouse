@@ -75,21 +75,21 @@ namespace CoffeeHouseAPI.Helper
 
         private static String CreateData(bool isSuccess)
         {
-            return (isSuccess) ? "Create success" : "Create failed";
+            return (isSuccess) ? "Tạo thành công" : "Tạo thất bại";
         }
 
         private static String GetData(bool isSuccess)
         {
-            return (isSuccess) ? "Get success" : "There is no item to show";
+            return (isSuccess) ? "Lấy dữ liệu thành công" : "Không có dữ liệu";
         }
 
         private static String DeleteData(bool isSuccess) {
-            return (isSuccess) ? "Delete success" : "Delete failed";
+            return (isSuccess) ? "Xoá thành công" : "Xoá thất bại";
         }
 
         private static String UpdateData(bool isSuccess)
         {
-            return (isSuccess) ? "Update success" : "Update failed";
+            return (isSuccess) ? "Cập nhật thành công" : "Cập nhật thất bại";
         }
 
         public static String API_ACTION_RESPONSE(bool isSuccess, Enum apiAction) {
