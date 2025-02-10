@@ -108,12 +108,7 @@ namespace CoffeeHouseAPI.Controllers
         public async Task<IActionResult> GetCart()
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
-            var carts = await _context.Carts
-                .Include(x => x.CartDetails).ThenInclude(y => y.Topping)
-                .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.Category)
-                .Where(x => x.CustomerId == loginResponse.Id)
-                .AsNoTracking()
-                .ToListAsync();
+            var carts = GetCartBy(loginResponse.Id, false);
             List<CartResponseDTO> cartResponseDTOs = new List<CartResponseDTO>();
             foreach (var cart in carts)
             {
@@ -237,6 +232,30 @@ namespace CoffeeHouseAPI.Controllers
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
                 Status = (int)HttpStatusCode.OK,
             });
+        }
+
+        private List<Cart> GetCartBy(int customerId, bool isTracking = false)
+        {
+            List<Cart> carts = new List<Cart>();
+            if (isTracking)
+            {
+                carts = _context.Carts
+                .Include(x => x.CartDetails).ThenInclude(y => y.Topping)
+                .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.Category)
+                .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.ImageDefaultNavigation)
+                .Where(x => x.CustomerId == customerId)
+                .AsNoTracking()
+                .ToList();
+            } else
+            {
+                carts = _context.Carts
+                .Include(x => x.CartDetails).ThenInclude(y => y.Topping)
+                .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.Category)
+                .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.ImageDefaultNavigation)
+                .Where(x => x.CustomerId == customerId)
+                .ToList();
+            }
+            return carts;
         }
     }
 }

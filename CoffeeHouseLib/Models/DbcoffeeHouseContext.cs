@@ -223,7 +223,6 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.HasIndex(e => e.Id, "UQ__Order__3214EC06C31E2FAF").IsUnique();
 
             entity.Property(e => e.OrderDate).HasColumnType("datetime");
-            entity.Property(e => e.Status).HasMaxLength(255);
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
@@ -251,6 +250,11 @@ public partial class DbcoffeeHouseContext : DbContext
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__OrderDeta__Order__778AC167");
+
+            entity.HasOne(d => d.ProductSize).WithMany(p => p.OrderDetails)
+                .HasForeignKey(d => d.ProductSizeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__OrderDeta__Produ__282DF8C2");
         });
 
         modelBuilder.Entity<OrderLog>(entity =>
@@ -284,18 +288,9 @@ public partial class DbcoffeeHouseContext : DbContext
 
         modelBuilder.Entity<OrderTopping>(entity =>
         {
-            entity.HasKey(e => new { e.OrderDetailId, e.ToppingId }).HasName("PK__OrderTop__9D59FFA4D2CE8CE8");
+            entity.HasKey(e => new { e.ToppingId, e.OrderDetailId }).HasName("PK__OrderTop__9D59FFA4D2CE8CE8");
 
             entity.ToTable("OrderTopping");
-
-            entity.HasIndex(e => e.OrderDetailId, "UQ__OrderTop__D3B9D36D7EBF959C").IsUnique();
-
-            entity.Property(e => e.OrderDetailId).ValueGeneratedOnAdd();
-
-            entity.HasOne(d => d.OrderDetail).WithOne(p => p.OrderTopping)
-                .HasForeignKey<OrderTopping>(d => d.OrderDetailId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__OrderTopp__Order__7A672E12");
 
             entity.HasOne(d => d.Topping).WithMany(p => p.OrderToppings)
                 .HasForeignKey(d => d.ToppingId)

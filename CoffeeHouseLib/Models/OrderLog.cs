@@ -9,7 +9,7 @@ public partial class OrderLog
 
     public int OrderId { get; set; }
 
-    public DateOnly TimeLog { get; set; }
+    public DateTime TimeLog { get; set; }
 
     public virtual Order Order { get; set; } = null!;
 
