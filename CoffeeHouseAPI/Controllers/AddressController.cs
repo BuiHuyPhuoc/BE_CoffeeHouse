@@ -3,6 +3,7 @@ using CoffeeHouseAPI.DTOs.Address;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -19,11 +20,13 @@ namespace CoffeeHouseAPI.Controllers
     {
         readonly DbcoffeeHouseContext _context;
         readonly IMapper _mapper;
+        readonly FirebaseService _firebaseService;
 
-        public AddressController(DbcoffeeHouseContext context, IMapper mapper)
+        public AddressController(DbcoffeeHouseContext context, IMapper mapper, FirebaseService firebaseService)
         {
             _context = context;
             _mapper = mapper;
+            _firebaseService = firebaseService;
         }
 
         [HttpGet]
@@ -161,6 +164,34 @@ namespace CoffeeHouseAPI.Controllers
                 IsSuccess = true,
                 Status = (int)HttpStatusCode.OK,
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.DELETE)
+            });
+        }
+
+        [HttpGet]
+        [Route("GetVNAddress")]
+        public async Task<IActionResult> GetVNAddress()
+        {
+            var address = await _firebaseService.GetProvincesAsync();
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Value = address,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
+            });
+        }
+
+        [HttpGet]
+        [Route("GetProvince")]
+        public async Task<IActionResult> GetProvince()
+        {
+            var address = await _firebaseService.GetProvincesAsync();
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Value = address,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
             });
         }
     }

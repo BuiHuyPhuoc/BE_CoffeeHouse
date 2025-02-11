@@ -47,9 +47,7 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
                         Detail = "An unexpected error occurred.",
                     });
                 }
-
             }
-
         }
 
     }

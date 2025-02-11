@@ -50,6 +50,19 @@ namespace CoffeeHouseAPI.Controllers
                 }
             }
 
+            Address? address = _context.Addresses.Where(x => x.Id == request.AddressId && x.CustomerId == loginResponse.Id).FirstOrDefault();
+
+            if (address == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Địa chỉ không hợp lệ",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
@@ -58,6 +71,7 @@ namespace CoffeeHouseAPI.Controllers
                     newOrder.VoucherId = voucher?.Id;
                     newOrder.CustomerId = loginResponse.Id;
                     newOrder.OrderDate = DateTime.Now;
+                    newOrder.AddressId = address.Id;
 
                     _context.Orders.Add(newOrder);
                     await this.SaveChanges(_context);

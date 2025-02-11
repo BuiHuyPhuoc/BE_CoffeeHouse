@@ -8,6 +8,8 @@ namespace CoffeeHouseAPI.DTOs.Order
         public int? VoucherId { get; set; }
 
         public required List<CreateOrderDetailDTO> OrderDetails { get; set; }
+
+        public int AddressId { get; set; }
    
     }
 
