@@ -13,6 +13,10 @@ public partial class Order
 
     public int? VoucherId { get; set; }
 
+    public int AddressId { get; set; }
+
+    public virtual Address Address { get; set; } = null!;
+
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
