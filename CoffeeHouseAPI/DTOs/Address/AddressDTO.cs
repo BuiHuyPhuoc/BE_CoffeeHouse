@@ -2,9 +2,9 @@
 {
     public class AddressDTO
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
 
         public string AddressNumber { get; set; } = null!;
 
