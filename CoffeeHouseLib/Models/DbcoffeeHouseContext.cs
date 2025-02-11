@@ -57,7 +57,7 @@ public partial class DbcoffeeHouseContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=DBCoffeeHouse.mssql.somee.com;Database=DBCoffeeHouse;User Id=buihuyphuc111_SQLLogin_1;Password=Somee2k3.;TrustServerCertificate=True;");
+        => optionsBuilder.UseSqlServer("Server=DBCoffeeHouse.mssql.somee.com;Database=DBCoffeeHouse;User Id=buihuyphuc111_SQLLogin_1;Password='Somee2k3.';TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -94,9 +94,9 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.HasIndex(e => e.Id, "UQ__Address__3214EC0683CE60F9").IsUnique();
 
-            entity.Property(e => e.Address1)
-                .HasMaxLength(255)
-                .HasColumnName("Address");
+            entity.Property(e => e.AddressNumber).HasMaxLength(255);
+            entity.Property(e => e.FullName).HasMaxLength(255);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Addresses)
                 .HasForeignKey(d => d.CustomerId)
@@ -264,6 +264,7 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.ToTable("OrderLog");
 
             entity.Property(e => e.StatusCode).HasMaxLength(20);
+            entity.Property(e => e.TimeLog).HasColumnType("datetime");
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderLogs)
                 .HasForeignKey(d => d.OrderId)
@@ -305,6 +306,10 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.ToTable("Product");
 
             entity.HasIndex(e => e.CategoryId, "IX_Product_CategoryId");
+
+            entity.HasIndex(e => e.Id, "IX_Product_Id");
+
+            entity.HasIndex(e => e.ImageDefault, "IX_Product_ImageDefault");
 
             entity.HasIndex(e => e.Id, "UQ__Product__3214EC0614DAD9E1").IsUnique();
 

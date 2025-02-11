@@ -21,6 +21,8 @@ public partial class Product
 
     public DateTime? CreatedAt { get; set; }
 
+    public string? Material { get; set; }
+
     public virtual Category Category { get; set; } = null!;
 
     public virtual Image? ImageDefaultNavigation { get; set; }

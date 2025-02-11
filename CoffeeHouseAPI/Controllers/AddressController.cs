@@ -95,7 +95,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            address.Address1 = request.Address;
+            address.AddressNumber = request.AddressNumber;
             address.CustomerId = loginResponse.Id;
 
             if (address.IsDefault == true && request.IsDefault == false)

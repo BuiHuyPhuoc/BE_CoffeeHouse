@@ -1,7 +1,5 @@
 ﻿Scaffold-DbContext "Server=LAPTOP-E8TQ0T9U\SQLEXPRESS;Database=DBCoffeeHouse;User Id=admin;Password=123;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
 
-connectionString = "Data Source=DBCoffeeHouse.mssql.somee.com;Initial Catalog=DBCoffeeHouse;User ID=buihuyphuc111_SQLLogin_1;Password=Somee2k3.;Persist Security Info=False;TrustServerCertificate=True"
-
 Scaffold-DbContext "Server=DBCoffeeHouse.mssql.somee.com;Database=DBCoffeeHouse;User Id=buihuyphuc111_SQLLogin_1;Password=Somee2k3.;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
 
 Scaffold-DbContext "Host=db.jvxqfvhlilugqgovphhv.supabase.co;Database=postgres;Username=postgres;Password=DJhnByPTU5uSGwmU;SSL Mode=Require;Trust Server Certificate=true" Npgsql.EntityFrameworkCore.PostgreSQL -OutputDir Models -Context DbcoffeeHouseContext
