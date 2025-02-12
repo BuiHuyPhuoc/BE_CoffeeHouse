@@ -168,33 +168,5 @@ namespace CoffeeHouseAPI.Controllers
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.DELETE)
             });
         }
-
-        [HttpGet]
-        [Route("GetVNAddress")]
-        public async Task<IActionResult> GetVNAddress()
-        {
-            var address = await _firebaseService.GetProvincesAsync();
-            return Ok(new APIResponseBase
-            {
-                IsSuccess = true,
-                Status = (int)HttpStatusCode.OK,
-                Value = address,
-                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
-            });
-        }
-
-        [HttpGet]
-        [Route("GetProvince")]
-        public async Task<IActionResult> GetProvince()
-        {
-            var address = await _firebaseService.GetProvincesAsync();
-            return Ok(new APIResponseBase
-            {
-                IsSuccess = true,
-                Status = (int)HttpStatusCode.OK,
-                Value = address,
-                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
-            });
-        }
     }
 }
