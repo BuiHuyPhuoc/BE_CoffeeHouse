@@ -160,6 +160,7 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             _context.Remove(address);
+            await this.SaveChanges(_context);
 
             return Ok(new APIResponseBase
             {
