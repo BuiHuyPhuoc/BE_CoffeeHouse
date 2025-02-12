@@ -165,7 +165,7 @@ namespace CoffeeHouseAPI.Controllers
             {
                 IsSuccess = true,
                 Status = (int)HttpStatusCode.OK,
-                Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.DELETE)
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.DELETE)
             });
         }
     }
