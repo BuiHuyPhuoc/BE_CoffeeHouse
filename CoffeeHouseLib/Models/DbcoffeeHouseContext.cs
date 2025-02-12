@@ -19,6 +19,8 @@ public partial class DbcoffeeHouseContext : DbContext
 
     public virtual DbSet<Address> Addresses { get; set; }
 
+    public virtual DbSet<Aiconfig> Aiconfigs { get; set; }
+
     public virtual DbSet<Cart> Carts { get; set; }
 
     public virtual DbSet<CartDetail> CartDetails { get; set; }
@@ -105,6 +107,16 @@ public partial class DbcoffeeHouseContext : DbContext
                 .HasForeignKey(d => d.CustomerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Address__Custome__72C60C4A");
+        });
+
+        modelBuilder.Entity<Aiconfig>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__AIConfig__3214EC0776DAF6DC");
+
+            entity.ToTable("AIConfig");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Key).HasMaxLength(200);
         });
 
         modelBuilder.Entity<Cart>(entity =>

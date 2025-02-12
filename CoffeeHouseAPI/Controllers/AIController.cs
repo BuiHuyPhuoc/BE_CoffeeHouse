@@ -3,19 +3,13 @@ using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseLib.Models;
-using Google.Api.Gax.ResourceNames;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Newtonsoft.Json;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionTranslators.Internal;
 using System.Net;
-using System.Net.Http;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using static Google.Apis.Requests.BatchRequest;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -59,37 +53,42 @@ namespace CoffeeHouseAPI.Controllers
         public async Task<IActionResult> RecommendAI([FromBody] MessageToAI request)
         {
             var builder = WebApplication.CreateBuilder();
-            string? aiKey = builder.Configuration["AIConfig:GerminiKey"];
+            Aiconfig? aiKey = _context.Aiconfigs.FirstOrDefault();
 
             if (aiKey == null) throw new Exception("Wrong when call message");
 
-            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={aiKey}";
+            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={aiKey.Key}";
 
             var menuAI = GetMenuForAI();
 
-            string AIPromt = "Với vai trò là một nữ Barista của một quán cafe - thức uống. Hãy giúp tôi đưa ra những thức uống mà khách hàng yêu cầu dựa vào dữ liệu mà tôi cung cấp cho bạn ở dưới đây: \n" +
-                $"{System.Text.Json.JsonSerializer.Serialize(menuAI)} \n" +
-                "Dựa vào yêu cầu của khách hàng, phân tích ra mùi vị, thành phần, công dụng để có thể đưa ra nhiều nhất 3 lựa chọn với tên món hợp lý nhé. Ví dụ như khách hàng yêu cầu \"Đồ uống ngọt, có vị sữa, béo\" thì có thể cân nhắc món Trà sữa. \n" +
-                "Phản hồi của bạn luôn luôn có dạng chuỗi JSON như sau: [{ \"productId\": 22, \"productName\": \"Trà sữa truyền thống\", \"message\": \"\", \"isRelated\": true }] \n" +
-                "Với productId và productName là id và tên của sản phẩm được cung cấp trong dữ liệu mẫu. 'message' là tin nhắn phản hồi từ bạn, message này không bao gồm chuỗi json đã được cung cấp từ trước. Chỉ có chứa tin nhắn phản hồi thông thường của bạn. 'isRelated' dùng để xác định câu trả lời của bạn từ 'message' có thuộc về lĩnh vực của bạn hay không. Lĩnh vực của bạn là một người Barista đang tư vấn cho khách hàng của mình về món đồ uống mà bạn cho rằng nó sẽ phù hợp yêu cầu của khách hàng. Nếu phù hợp thì trả về là true, còn không thì là false. Những thông tin như sản phẩm khuyến mãi, sản phẩm sắp ra mắt, ... và những thông tin không nằm trong dữ liệu được cung cấp, hãy trả lời từ chối một cách lịch sự với khách hàng. Cách xưng hô, hãy luôn xưng hô là quý khách(khách hàng) - em(bạn). Hãy luôn trả về một chuỗi json như ví dụ mẫu, kể cả message có là gì đi nữa.";
+            var options = new JsonSerializerOptions
+            {
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                WriteIndented = true
+            };
+
+            string stringMenu = System.Text.Json.JsonSerializer.Serialize(menuAI, options);
+
+            string promt = aiKey.Promt.Replace("{0}", stringMenu);
 
             var payload = new
             {
-                contents = new[] { 
+                contents = new[] {
                     new {
                         role = "user",
                         parts = new[] {
-                            new { 
+                            new {
                                 text = request.Message
                             }
                         },
                     }
                 },
-                systemInstruction = new { 
+                systemInstruction = new
+                {
                     role = "user",
                     parts = new[] {
                         new {
-                            text = AIPromt
+                            text = promt,
                         }
                     }
                 },
@@ -108,7 +107,7 @@ namespace CoffeeHouseAPI.Controllers
 
             HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Clear();
-            httpClient.DefaultRequestHeaders.Add("x-goog-api-key", aiKey);
+            httpClient.DefaultRequestHeaders.Add("x-goog-api-key", aiKey.Key);
 
             HttpResponseMessage response = await httpClient.PostAsync(url, content);
 
@@ -130,14 +129,12 @@ namespace CoffeeHouseAPI.Controllers
             {
                 string text = textElement.GetString() ?? "";
 
-                // Loại bỏ ```json và ```
+                
                 string jsonText = Regex.Replace(text, @"```json|```", "").Trim();
                 jsonText = Regex.Unescape(jsonText);
                 jsonText = jsonText.Replace("\n", "").Replace("\t", "").Replace("\r", "").Replace("\\", "");
 
-                // Deserialize thành object
                 var productInfo = JsonConvert.DeserializeObject<List<ProductRecommendation>>(jsonText);
-                // var productInfo = JsonSerializer.Deserialize<List<ProductRecommendation>>(jsonText);
 
                 if (productInfo != null)
                 {
@@ -148,7 +145,8 @@ namespace CoffeeHouseAPI.Controllers
                         Status = (int)HttpStatusCode.OK,
                         Value = productInfo
                     });
-                } else
+                }
+                else
                 {
                     return BadRequest(new APIResponseBase
                     {
