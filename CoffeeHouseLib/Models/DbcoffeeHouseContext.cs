@@ -95,8 +95,11 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.HasIndex(e => e.Id, "UQ__Address__3214EC0683CE60F9").IsUnique();
 
             entity.Property(e => e.AddressNumber).HasMaxLength(255);
+            entity.Property(e => e.District).HasMaxLength(10);
             entity.Property(e => e.FullName).HasMaxLength(255);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.Province).HasMaxLength(10);
+            entity.Property(e => e.Ward).HasMaxLength(10);
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Addresses)
                 .HasForeignKey(d => d.CustomerId)
