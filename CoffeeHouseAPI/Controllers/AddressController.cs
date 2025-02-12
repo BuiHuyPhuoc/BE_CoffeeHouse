@@ -100,6 +100,8 @@ namespace CoffeeHouseAPI.Controllers
 
             address.AddressNumber = request.AddressNumber;
             address.CustomerId = loginResponse.Id;
+            address.PhoneNumber = request.PhoneNumber;
+            address.FullName = request.FullName;
 
             if (address.IsDefault == true && request.IsDefault == false)
             {
@@ -127,7 +129,7 @@ namespace CoffeeHouseAPI.Controllers
             {
                 IsSuccess = true,
                 Status = (int)HttpStatusCode.OK,
-                Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT)
             });
         }
 

@@ -3,7 +3,6 @@ using CoffeeHouseAPI.DTOs.Address;
 using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseLib.Models;
 using Firebase.Database;
-using FireSharp.Interfaces;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -16,7 +15,6 @@ namespace CoffeeHouseAPI.Services.Firebase
         private readonly StorageClient _storageClient;
         private string _imageBucket = "shopoes-2e0b8.appspot.com";
         private string _imageFolder = "coffee_house";
-        private readonly FireSharp.FirebaseClient _firebaseClient;
 
         public FirebaseService(IConfiguration configuration)
         {
@@ -36,17 +34,11 @@ namespace CoffeeHouseAPI.Services.Firebase
                 client_x509_cert_url = firebaseConfig.ClientX509CertUrl
             };
 
-            IFirebaseConfig databaseConfig = new FireSharp.Config.FirebaseConfig
-            {
-                BasePath = firebaseConfig.DatabaseUrl,
-                AuthSecret = firebaseConfig.AuthSecret,
-            };
 
             var jsonString = System.Text.Json.JsonSerializer.Serialize(jsonCredentials);
             var credential = GoogleCredential.FromJson(jsonString);
 
             _storageClient = StorageClient.Create(credential);
-            _firebaseClient = new FireSharp.FirebaseClient(databaseConfig);
         }
 
         public async Task<string> UploadImageAsync(ImageRequestDTO request)
@@ -63,21 +55,6 @@ namespace CoffeeHouseAPI.Services.Firebase
 
             string downloadUrl = $"https://firebasestorage.googleapis.com/v0/b/{_imageBucket}/o/{Uri.EscapeDataString(fileName)}?alt=media";
             return downloadUrl;
-        }
-
-        public async Task<List<Province>> GetProvincesAsync()
-        {
-            var response = await _firebaseClient.GetAsync("/11/Address");
-            if (response.Body == "null") return new List<Province>();
-
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true
-            };
-
-            var provinces = JsonSerializer.Deserialize<List<Province>>(response.Body, options);
-            return provinces ?? new List<Province>();
         }
     }
 

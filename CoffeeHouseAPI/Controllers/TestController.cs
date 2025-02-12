@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CoffeeHouseAPI.DTOs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -9,7 +11,8 @@ namespace CoffeeHouseAPI.Controllers
     {
         [HttpGet]
         [Route("Test")]
-        public IActionResult Test() {
+        public IActionResult Test()
+        {
             return Ok();
         }
 
@@ -19,6 +22,23 @@ namespace CoffeeHouseAPI.Controllers
         {
             string port = this.GetUrlPort();
             return Ok(port);
+        }
+
+        [HttpPost]
+        [Route("DemoAddRange")]
+        public IActionResult DemoAddRange([FromBody] string request)
+        {
+            StringListSingleton.Instance.AddString(request);
+
+            if (StringListSingleton.Instance.Strings.Count < 5)
+            {
+                return BadRequest("Not Enough: " + JsonSerializer.Serialize(StringListSingleton.Instance.Strings));
+            }
+            else
+            {
+                StringListSingleton.Instance.RemoveAll();
+                return Ok(JsonSerializer.Serialize(StringListSingleton.Instance.Strings));
+            }
         }
     }
 

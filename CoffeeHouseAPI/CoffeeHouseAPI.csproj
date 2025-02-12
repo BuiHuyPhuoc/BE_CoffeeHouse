@@ -20,7 +20,6 @@
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
     <PackageReference Include="FirebaseDatabase.net" Version="4.2.0" />
-    <PackageReference Include="FireSharp" Version="2.0.4" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
