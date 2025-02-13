@@ -94,6 +94,8 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("Address");
 
+            entity.HasIndex(e => e.CustomerId, "IX_Address_CustomerId");
+
             entity.HasIndex(e => e.Id, "UQ__Address__3214EC0683CE60F9").IsUnique();
 
             entity.Property(e => e.AddressNumber).HasMaxLength(255);
@@ -460,7 +462,7 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.Property(e => e.Code).HasMaxLength(50);
             entity.Property(e => e.Description).HasMaxLength(300);
-            entity.Property(e => e.DiscountType).HasMaxLength(255);
+            entity.Property(e => e.DiscountType).HasMaxLength(20);
             entity.Property(e => e.DiscountValue).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
