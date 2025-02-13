@@ -35,7 +35,7 @@ namespace CoffeeHouseAPI.Controllers
         {
             var loginResponse = GetLoginResponseFromHttpContext();
 
-            var addresses = _context.Addresses.Where(x => x.CustomerId == loginResponse.Id).ToList();
+            var addresses = _context.Addresses.Where(x => x.CustomerId == loginResponse.Id && x.IsValid).ToList();
 
             var addressDTOs = _mapper.Map<List<AddressDTO>>(addresses);
 
@@ -56,7 +56,7 @@ namespace CoffeeHouseAPI.Controllers
 
             request.CustomerId = loginResponse.Id;
 
-            var currentDefaultAddress = await _context.Addresses.Where(x => x.CustomerId == loginResponse.Id && x.IsDefault).FirstOrDefaultAsync();
+            var currentDefaultAddress = await _context.Addresses.Where(x => x.CustomerId == loginResponse.Id && x.IsDefault && x.IsValid).FirstOrDefaultAsync();
 
             if (currentDefaultAddress != null && request.IsDefault == true)
             {
@@ -65,6 +65,7 @@ namespace CoffeeHouseAPI.Controllers
                 await this.SaveChanges(_context);
             }
 
+            request.IsValid = true;
             var address = _mapper.Map<Address>(request);
 
             _context.Addresses.Add(address);
@@ -85,7 +86,7 @@ namespace CoffeeHouseAPI.Controllers
         [Route("UpdateAddress")]
         public async Task<IActionResult> UpdateAddress(int addressId, [FromBody]AddressDTO request)
         {
-            var address = await _context.Addresses.Where(x => x.Id == addressId).FirstOrDefaultAsync();
+            var address = await _context.Addresses.Where(x => x.Id == addressId && x.IsValid).FirstOrDefaultAsync();
             var loginResponse = this.GetLoginResponseFromHttpContext();
 
             if (address == null || address.CustomerId != loginResponse.Id)
@@ -105,7 +106,7 @@ namespace CoffeeHouseAPI.Controllers
 
             if (address.IsDefault == true && request.IsDefault == false)
             {
-                var nonDefaultAddress = _context.Addresses.Where(x => x.IsDefault == false && x.CustomerId == loginResponse.Id).FirstOrDefault();
+                var nonDefaultAddress = _context.Addresses.Where(x => x.IsDefault == false && x.CustomerId == loginResponse.Id && x.IsValid).FirstOrDefault();
 
                 if (nonDefaultAddress == null) throw new Exception();
 
@@ -113,7 +114,7 @@ namespace CoffeeHouseAPI.Controllers
                 await this.SaveChanges(_context);
             }
             else if (address.IsDefault == false && request.IsDefault == true) { 
-                var defaultAddress = _context.Addresses.Where(x => x.IsDefault == true && x.CustomerId == loginResponse.Id).FirstOrDefault();
+                var defaultAddress = _context.Addresses.Where(x => x.IsDefault == true && x.CustomerId == loginResponse.Id && x.IsValid).FirstOrDefault();
 
                 if (defaultAddress != null)
                 {
@@ -123,6 +124,7 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             address.IsDefault = request.IsDefault;
+            address.IsValid = true;
             await this.SaveChanges(_context);
 
             return Ok(new APIResponseBase
@@ -138,7 +140,7 @@ namespace CoffeeHouseAPI.Controllers
         public async Task<IActionResult> DeleteAddress(int addressId)
         {
             var loginResponse = this.GetLoginResponseFromHttpContext();
-            var address = _context.Addresses.Where(x => x.Id == addressId && loginResponse.Id == x.CustomerId).FirstOrDefault();
+            var address = _context.Addresses.Where(x => x.Id == addressId && loginResponse.Id == x.CustomerId && x.IsValid).FirstOrDefault();
             
             if (address == null) {
                 return BadRequest(new APIResponseBase
@@ -151,15 +153,15 @@ namespace CoffeeHouseAPI.Controllers
 
             if (address.IsDefault)
             {
-                var nonDefaultAddress = _context.Addresses.Where(x => x.IsDefault == false && x.CustomerId == loginResponse.Id).FirstOrDefault();
-
-                if (nonDefaultAddress == null) throw new Exception();
-
-                nonDefaultAddress.IsDefault = true;
-                await this.SaveChanges(_context);
+                return BadRequest( new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Message = "Địa chỉ này là mặc định, không thể xoá.",
+                });
             }
 
-            _context.Remove(address);
+            address.IsValid = false;
             await this.SaveChanges(_context);
 
             return Ok(new APIResponseBase
