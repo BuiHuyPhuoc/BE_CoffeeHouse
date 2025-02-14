@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CoffeeHouseAPI.DTOs.AI;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Category;
 using CoffeeHouseAPI.DTOs.Image;
@@ -36,8 +37,12 @@ namespace CoffeeHouseAPI.Controllers
         [Route("GetProduct")]
         public async Task<IActionResult> GetProduct(int? quantity)
         {
-            var products = await _context.Products.Include(x => x.ProductSizes).Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.Category).Include(x => x.Images).ToListAsync();
+            var products = await _context.Products
+                .Include(x => x.ProductSizes)
+                .Include(x => x.ImageDefaultNavigation)
+                .Include(x => x.Category)
+                .Include(x => x.Images)
+                .ToListAsync();
             if (quantity != null)
             {
                 products = products.Take((int)quantity).ToList();
@@ -136,7 +141,7 @@ namespace CoffeeHouseAPI.Controllers
             {
                 return BadRequest(new APIResponseBase
                 {
-                    IsSuccess = true,
+                    IsSuccess = false,
                     Status = (int)HttpStatusCode.BadRequest,
                     Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
                 });
@@ -159,6 +164,46 @@ namespace CoffeeHouseAPI.Controllers
         //}
 
         [HttpGet]
+        [Route("GetProductByCategory")]
+        public async Task<IActionResult> GetProductByCategory(int cateogryId)
+        {
+            var category = await _context.Categories.Where(x => x.Id == cateogryId).FirstOrDefaultAsync();
+
+            if (category == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
+                });
+            }
+
+            List<ProductResponseDTO> productResponseDTOs = new List<ProductResponseDTO>();
+
+            if (category.InverseIdParentNavigation.Count > 0)
+            {
+                foreach (var childCate in category.InverseIdParentNavigation)
+                {
+                    var products = GetProductWithRelate(true).Where(x => x.CategoryId == childCate.Id).ToList();
+                    productResponseDTOs.AddRange(_mapper.Map<List<ProductResponseDTO>>(products));
+                }
+            } else
+            {
+                var products = GetProductWithRelate(true).Where(x => x.CategoryId == category.Id).ToList();
+                productResponseDTOs.AddRange(_mapper.Map<List<ProductResponseDTO>>(products));
+            }
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Value = productResponseDTOs,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
+            });
+        }
+
+        [HttpGet]
         [Route("GetRecommendProduct")]
         public async Task<IActionResult> GetRecommendProduct(int productId)
         {
@@ -168,8 +213,7 @@ namespace CoffeeHouseAPI.Controllers
                 return BadRequest(
                     new APIResponseBase
                     {
-                        IsSuccess = false
-                        ,
+                        IsSuccess = false,
                         Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
                         Status = (int)HttpStatusCode.BadRequest
                     }
@@ -178,7 +222,7 @@ namespace CoffeeHouseAPI.Controllers
 
             var products = await _context.Products
                 .Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.ProductSizes)
+                .Include(x => x.ProductSizes.OrderBy(y => y.Price))
                 .Include(x => x.Category)
                 .Where(x => x.IsValid == true && x.Description2 != null)
                 .ToListAsync();
@@ -214,13 +258,42 @@ namespace CoffeeHouseAPI.Controllers
 
             var resultDTO = _mapper.Map<List<ProductResponseDTO>>(result);
             return Ok(new APIResponseBase
-                {
-                    Value = resultDTO,
-                    Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
-                    Status = (int)HttpStatusCode.OK,
-                    IsSuccess = true
-                }
+            {
+                Value = resultDTO,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Status = (int)HttpStatusCode.OK,
+                IsSuccess = true
+            }
             );
+        }
+
+        private List<Product> GetProductWithRelate(bool isTracking)
+        {
+            if (isTracking)
+            {
+                return _context.Products
+                    .Include(x => x.ProductDiscounts.Where(x => x.IsActive))
+                    .Include(x => x.ImageDefaultNavigation)
+                    .Include(x => x.Images)
+                    .Include(x => x.Category)
+                    .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
+                    .Include(x => x.Toppings)
+                    .Where(x => x.IsValid)
+                    .AsNoTracking()
+                    .ToList();
+            }
+            else
+            {
+                return _context.Products
+                    .Include(x => x.ProductDiscounts.Where(x => x.IsActive))
+                    .Include(x => x.ImageDefaultNavigation)
+                    .Include(x => x.Images)
+                    .Include(x => x.Category)
+                    .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
+                    .Include(x => x.Toppings)
+                    .Where(x => x.IsValid)
+                    .ToList();
+            }
         }
 
         private double CosineSimilarity(float[] vectorA, float[] vectorB)
