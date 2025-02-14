@@ -7,6 +7,7 @@ using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseAPI.DTOs.Product;
 using CoffeeHouseAPI.DTOs.ProductSize;
 using CoffeeHouseAPI.DTOs.Topping;
+using CoffeeHouseAPI.DTOs.Voucher;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseLib.Models;
 
@@ -58,6 +59,9 @@ namespace OrderService.Helper
 
             CreateMap<Topping, ToppingDTO>();
             CreateMap<ToppingDTO, Topping>();
+
+            CreateMap<Voucher, VoucherDTO>();
+            CreateMap<VoucherDTO, Voucher>();
         }
     }
 }

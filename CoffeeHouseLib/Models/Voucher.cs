@@ -15,7 +15,7 @@ public partial class Voucher
 
     public decimal DiscountValue { get; set; }
 
-    public DateTime? StartDate { get; set; }
+    public DateTime StartDate { get; set; }
 
     public DateTime? EndDate { get; set; }
 
