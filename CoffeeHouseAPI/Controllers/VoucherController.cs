@@ -3,6 +3,7 @@ using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Voucher;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.Services.VoucherService;
 using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,11 +18,13 @@ namespace CoffeeHouseAPI.Controllers
     {
         readonly DbcoffeeHouseContext _context;
         readonly IMapper _mapper;
+        readonly IVoucherService _voucherService
 
-        public VoucherController(DbcoffeeHouseContext context, IMapper mapper)
+        public VoucherController(DbcoffeeHouseContext context, IMapper mapper, IVoucherService voucherService)
         {
             _context = context;
             _mapper = mapper;
+            _voucherService = voucherService;
         }
 
         [HttpGet]
@@ -36,7 +39,7 @@ namespace CoffeeHouseAPI.Controllers
 
             foreach (var voucher in vouchers)
             {
-                if (ValidateVoucher(voucher))
+                if (_voucherService.ValidateVoucher(voucher))
                 {
                     var voucherUsedCount = _context.Orders.Where(x => x.VoucherId == voucher.Id).ToList();
 
