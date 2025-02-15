@@ -4,3 +4,5 @@ Scaffold-DbContext "Server=DBCoffeeHouse.mssql.somee.com;Database=DBCoffeeHouse;
 
 Scaffold-DbContext "Host=db.jvxqfvhlilugqgovphhv.supabase.co;Database=postgres;Username=postgres;Password=DJhnByPTU5uSGwmU;SSL Mode=Require;Trust Server Certificate=true" Npgsql.EntityFrameworkCore.PostgreSQL -OutputDir Models -Context DbcoffeeHouseContext
 riGBOl8ei0uFDdj5
+
+Scaffold-DbContext "Server=103.140.249.182;Database=DBCoffeeHouse;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
