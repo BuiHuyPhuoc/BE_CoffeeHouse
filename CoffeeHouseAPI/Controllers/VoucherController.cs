@@ -18,7 +18,7 @@ namespace CoffeeHouseAPI.Controllers
     {
         readonly DbcoffeeHouseContext _context;
         readonly IMapper _mapper;
-        readonly IVoucherService _voucherService
+        readonly IVoucherService _voucherService;
 
         public VoucherController(DbcoffeeHouseContext context, IMapper mapper, IVoucherService voucherService)
         {
@@ -65,12 +65,6 @@ namespace CoffeeHouseAPI.Controllers
                 Status = (int)HttpStatusCode.OK,
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
             });
-        }
-
-        private bool ValidateVoucher(Voucher voucher)
-        {
-            return (((voucher.EndDate != null && voucher.EndDate >= DateTime.Now) || voucher.EndDate == null)
-                && voucher.StartDate <= DateTime.Now && voucher.LitmitPerUser > 0) ? true : false;
         }
     }
 }

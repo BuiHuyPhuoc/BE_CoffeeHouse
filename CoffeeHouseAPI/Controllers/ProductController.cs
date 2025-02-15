@@ -7,6 +7,7 @@ using CoffeeHouseAPI.DTOs.Product;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.Firebase;
+using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseLib.Models;
 using Google.Apis.Upload;
 using Microsoft.AspNetCore.Mvc;
@@ -21,28 +22,27 @@ namespace CoffeeHouseAPI.Controllers
     [ApiController]
     public class ProductController : TCHControllerBase
     {
-
+        readonly IProductService _productService;
         readonly DbcoffeeHouseContext _context;
         readonly IMapper _mapper;
         readonly FirebaseService _firebaseService;
 
-        public ProductController(DbcoffeeHouseContext context, IMapper mapper, FirebaseService firebaseService)
+        public ProductController(DbcoffeeHouseContext context, 
+            IMapper mapper, 
+            FirebaseService firebaseService,
+            IProductService productService)
         {
             _context = context;
             _mapper = mapper;
             _firebaseService = firebaseService;
+            _productService = productService;
         }
 
         [HttpGet]
         [Route("GetProduct")]
-        public async Task<IActionResult> GetProduct(int? quantity)
+        public IActionResult GetProduct(int? quantity)
         {
-            var products = await _context.Products
-                .Include(x => x.ProductSizes)
-                .Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.Category)
-                .Include(x => x.Images)
-                .ToListAsync();
+            var products = _productService.GetProductWithRelate();
             if (quantity != null)
             {
                 products = products.Take((int)quantity).ToList();
@@ -55,7 +55,6 @@ namespace CoffeeHouseAPI.Controllers
                 Value = productDTOs,
                 IsSuccess = true
             });
-
         }
 
         [HttpPost]

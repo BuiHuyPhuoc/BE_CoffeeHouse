@@ -1,6 +1,7 @@
 ﻿using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.Email;
 using CoffeeHouseAPI.Services.Firebase;
+using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
 using Microsoft.EntityFrameworkCore;
 using OrderService.Helper;
@@ -46,7 +47,7 @@ namespace CoffeeHouseAPI.Extensions
             services.AddScoped<MasterAuth>();
 
             services.AddScoped<IVoucherService, VoucherService>();
-
+            services.AddScoped<IProductService, ProductService>();
         }
     }
 }

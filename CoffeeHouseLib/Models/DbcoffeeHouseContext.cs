@@ -59,7 +59,7 @@ public partial class DbcoffeeHouseContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=DBCoffeeHouse.mssql.somee.com;Database=DBCoffeeHouse;User Id=buihuyphuc111_SQLLogin_1;Password=Somee2k3.;TrustServerCertificate=True;");
+        => optionsBuilder.UseSqlServer("Server=103.140.249.182;Database=DBCoffeeHouse;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -149,6 +149,7 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.HasOne(d => d.Cart).WithMany(p => p.CartDetails)
                 .HasForeignKey(d => d.CartId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__CartDetai__CartI__2180FB33");
 
             entity.HasOne(d => d.Topping).WithMany(p => p.CartDetails)
