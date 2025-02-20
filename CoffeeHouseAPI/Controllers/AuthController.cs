@@ -453,7 +453,7 @@ namespace CoffeeHouseAPI.Controllers
                     new Claim(ClaimTypes.Name, customer.FullName),
                     new Claim(ClaimTypes.Email, customer.Email)
                 }),
-                Expires = DateTime.Now.AddMinutes(Convert.ToDouble(builder.Configuration["Jwt:Expires"])),
+                Expires = DateTime.Now.AddDays(Convert.ToDouble(builder.Configuration["Jwt:Expires"])),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials

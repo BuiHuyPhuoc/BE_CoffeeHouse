@@ -3,6 +3,7 @@ using AutoMapper;
 using CoffeeHouseAPI.DTOs.Address;
 using CoffeeHouseAPI.DTOs.Auth;
 using CoffeeHouseAPI.DTOs.Category;
+using CoffeeHouseAPI.DTOs.Discount;
 using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseAPI.DTOs.Product;
 using CoffeeHouseAPI.DTOs.ProductSize;
@@ -37,7 +38,10 @@ namespace OrderService.Helper
 
             CreateMap<Product, ProductRequestDTO>();
             CreateMap<ProductRequestDTO, Product>();
-            CreateMap<Product, ProductResponseDTO>();
+            CreateMap<Product, ProductResponseDTO>()
+                .ForMember(dest => dest.Discounts, opt => opt.MapFrom(src =>
+                    src.ProductDiscounts.Where(pd => pd.IsActive).Select(pd => pd.Discount)
+                ));
             CreateMap<ProductResponseDTO, Product>();
 
             //CreateMap<Image, ImageRequestDTO>()
@@ -62,6 +66,9 @@ namespace OrderService.Helper
 
             CreateMap<Voucher, VoucherDTO>();
             CreateMap<VoucherDTO, Voucher>();
+
+            CreateMap<Discount, DiscountDTO>();
+            CreateMap<DiscountDTO, Discount>();
         }
     }
 }

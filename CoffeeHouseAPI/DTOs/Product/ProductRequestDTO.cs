@@ -1,4 +1,5 @@
 ﻿using CoffeeHouseAPI.DTOs.Category;
+using CoffeeHouseAPI.DTOs.Discount;
 using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseAPI.DTOs.ProductSize;
 using CoffeeHouseAPI.DTOs.Topping;
@@ -40,5 +41,7 @@ namespace CoffeeHouseAPI.DTOs.Product
         public ImageResponseDTO ImageDefaultNavigation { get; set; } = null!;
 
         public List<ToppingDTO> Toppings { get; set; } = new List<ToppingDTO>();
+
+        public List<DiscountDTO> Discounts { get; set; } = new List<DiscountDTO>();
     }
 }

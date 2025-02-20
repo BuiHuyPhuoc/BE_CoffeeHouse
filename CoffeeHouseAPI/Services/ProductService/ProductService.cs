@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using CoffeeHouseAPI.DTOs.AI;
+using CoffeeHouseAPI.DTOs.Discount;
+using CoffeeHouseAPI.DTOs.Product;
 using CoffeeHouseLib.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,9 +23,10 @@ namespace CoffeeHouseAPI.Services.ProductService
             return _context.Products
                 .Include(x => x.Toppings.Where(x => x.IsValid))
                 .Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.ProductDiscounts.Where(x => x.IsActive))
+                .Include(x => x.ProductDiscounts.Where(x => x.IsActive && x.Discount.IsActive)).ThenInclude(x => x.Discount)
                 .Include(x => x.ProductSizes.OrderBy(y => y.Price).Where(y => y.IsValid))
                 .Include(x => x.Category)
+                .Where(x => x.IsValid)
                 .AsNoTracking()
                 .ToList();
         }
