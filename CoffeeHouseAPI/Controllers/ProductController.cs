@@ -128,14 +128,15 @@ namespace CoffeeHouseAPI.Controllers
         [Route("GetProductDetail")]
         public IActionResult GetProductDetail(int idProduct)
         {
-            var product = _context.Products
-                .Include(x => x.Toppings)
-                .Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.ProductDiscounts)
-                .Include(x => x.ProductSizes.OrderBy(y => y.Price))
-                .Include(x => x.Category)
-                .Include(x => x.Toppings)
-                .Where(x => x.Id == idProduct).AsNoTracking().FirstOrDefault();
+            //var product = _context.Products
+            //    .Include(x => x.Toppings)
+            //    .Include(x => x.ImageDefaultNavigation)
+            //    .Include(x => x.ProductDiscounts)
+            //    .Include(x => x.ProductSizes.OrderBy(y => y.Price))
+            //    .Include(x => x.Category)
+            //    .Include(x => x.Toppings)
+            //    .Where(x => x.Id == idProduct).AsNoTracking().FirstOrDefault();
+            var product = _productService.GetProductWithRelate().Where(x => x.Id == idProduct).FirstOrDefault();
             if (product == null)
             {
                 return BadRequest(new APIResponseBase

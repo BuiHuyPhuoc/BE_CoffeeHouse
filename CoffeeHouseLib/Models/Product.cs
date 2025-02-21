@@ -23,11 +23,13 @@ public partial class Product
 
     public string? Material { get; set; }
 
+    public int? DiscountId { get; set; }
+
     public virtual Category Category { get; set; } = null!;
 
-    public virtual Image? ImageDefaultNavigation { get; set; }
+    public virtual Discount? Discount { get; set; }
 
-    public virtual ICollection<ProductDiscount> ProductDiscounts { get; set; } = new List<ProductDiscount>();
+    public virtual Image? ImageDefaultNavigation { get; set; }
 
     public virtual ICollection<ProductSize> ProductSizes { get; set; } = new List<ProductSize>();
 

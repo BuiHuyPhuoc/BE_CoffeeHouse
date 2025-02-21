@@ -21,5 +21,5 @@ public partial class Discount
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
-    public virtual ICollection<ProductDiscount> ProductDiscounts { get; set; } = new List<ProductDiscount>();
+    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }
