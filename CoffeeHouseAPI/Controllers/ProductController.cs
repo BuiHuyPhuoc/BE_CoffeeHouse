@@ -155,12 +155,28 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
-        //[HttpGet]
-        //[Route("GetProductHomePage")]
-        //public async Task<IActionResult> GetProductHomePage()
-        //{
-
-        //}
+        [HttpGet]
+        [Route("GetProductHomePage")]
+        public async Task<IActionResult> GetProductHomePage()
+        {
+            ProductHomePageDTO productHomePageDTO = new ProductHomePageDTO();
+            var newestProducts = _productService.GetProductWithRelate()
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(5)
+                .ToList();
+            productHomePageDTO.Newests = _mapper.Map<List<ProductResponseDTO>>(newestProducts);
+            var saleProducts = _productService.GetProductWithRelate()
+                .Where(x => x.ProductDiscounts.Where(x => x.IsActive).ToList().Count != 0)
+                .ToList();
+            productHomePageDTO.Sales = _mapper.Map<List<ProductResponseDTO>>(saleProducts);
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Value = productHomePageDTO,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+            });
+        }
 
         [HttpGet]
         [Route("GetProductByCategory")]

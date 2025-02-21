@@ -38,7 +38,8 @@ namespace CoffeeHouseAPI.Extensions
             // Register for database context
             services.AddDbContext<CoffeeHouseLib.Models.DbcoffeeHouseContext>(options =>
             {
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+                var connectionString = configuration.GetConnectionString("DefaultConnection");
+                options.UseSqlServer(connectionString);
             });
 
             // Register for Firebase Service

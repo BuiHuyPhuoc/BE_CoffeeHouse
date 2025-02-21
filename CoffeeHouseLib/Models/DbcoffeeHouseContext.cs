@@ -53,6 +53,8 @@ public partial class DbcoffeeHouseContext : DbContext
 
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
+    public virtual DbSet<Review> Reviews { get; set; }
+
     public virtual DbSet<Topping> Toppings { get; set; }
 
     public virtual DbSet<Voucher> Vouchers { get; set; }
@@ -68,6 +70,8 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Account__3214EC0759ADDCE5");
 
             entity.ToTable("Account");
+
+            entity.HasIndex(e => e.Id, "IX_Account_Id");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AccessToken).HasMaxLength(255);
@@ -95,6 +99,8 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.ToTable("Address");
 
             entity.HasIndex(e => e.CustomerId, "IX_Address_CustomerId");
+
+            entity.HasIndex(e => e.Id, "IX_Address_Id");
 
             entity.HasIndex(e => e.Id, "UQ__Address__3214EC0683CE60F9").IsUnique();
 
@@ -127,6 +133,10 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("Cart");
 
+            entity.HasIndex(e => e.CustomerId, "IX_Cart_CustomerId");
+
+            entity.HasIndex(e => e.ProductSizeId, "IX_Cart_ProductSizeId");
+
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
@@ -147,6 +157,8 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("CartDetail");
 
+            entity.HasIndex(e => e.ToppingId, "IX_CartDetail_ToppingId");
+
             entity.HasOne(d => d.Cart).WithMany(p => p.CartDetails)
                 .HasForeignKey(d => d.CartId)
                 .OnDelete(DeleteBehavior.Cascade)
@@ -162,6 +174,8 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Category__3214EC077A29AB17");
 
             entity.ToTable("Category");
+
+            entity.HasIndex(e => e.IdParent, "IX_Category_IdParent");
 
             entity.HasIndex(e => e.Id, "UQ__Category__3214EC065893F82D").IsUnique();
 
@@ -263,6 +277,10 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("OrderDetail");
 
+            entity.HasIndex(e => e.OrderId, "IX_OrderDetail_OrderId");
+
+            entity.HasIndex(e => e.ProductSizeId, "IX_OrderDetail_ProductSizeId");
+
             entity.Property(e => e.Note).HasMaxLength(255);
 
             entity.HasOne(d => d.Discount).WithMany(p => p.OrderDetails)
@@ -315,6 +333,10 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.HasKey(e => new { e.ToppingId, e.OrderDetailId }).HasName("PK__OrderTop__9D59FFA4D2CE8CE8");
 
             entity.ToTable("OrderTopping");
+
+            entity.HasIndex(e => e.OrderDetailId, "IX_OrderTopping_OrderDetailId");
+
+            entity.HasIndex(e => e.ToppingId, "IX_OrderTopping_ToppingId");
 
             entity.HasOne(d => d.Topping).WithMany(p => p.OrderToppings)
                 .HasForeignKey(d => d.ToppingId)
@@ -412,6 +434,10 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("ProductSize");
 
+            entity.HasIndex(e => e.Id, "IX_ProductSize_Id");
+
+            entity.HasIndex(e => e.ProductId, "IX_ProductSize_ProductId");
+
             entity.HasIndex(e => e.Id, "UQ__ProductS__3214EC063D3BE48E").IsUnique();
 
             entity.Property(e => e.IsValid).HasDefaultValue(true);
@@ -436,6 +462,33 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.Property(e => e.Created).HasColumnType("datetime");
             entity.Property(e => e.Expire).HasColumnType("datetime");
             entity.Property(e => e.Revoke).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<Review>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Review__3214EC07079FDA38");
+
+            entity.ToTable("Review");
+
+            entity.HasIndex(e => new { e.CustomerId, e.ProductId }, "UQ__Review__6FEEA8B5A87B42F7").IsUnique();
+
+            entity.Property(e => e.Comment).HasMaxLength(255);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.Reviews)
+                .HasForeignKey(d => d.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__Review__Customer__2EDAF651");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.Reviews)
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__Review__ProductI__2FCF1A8A");
         });
 
         modelBuilder.Entity<Topping>(entity =>

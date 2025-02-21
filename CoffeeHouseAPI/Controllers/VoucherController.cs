@@ -66,5 +66,17 @@ namespace CoffeeHouseAPI.Controllers
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
             });
         }
+
+        //[HttpGet]
+        //[Route("GetVoucherByCode")]
+        //public IActionResult GetVoucherByCode(string code)
+        //{
+        //    var voucher = _context.Vouchers.Where(x => x.Code == code).FirstOrDefault();
+
+        //    if (voucher == null)
+        //    {
+                
+        //    }
+        //}
     }
 }
