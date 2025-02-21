@@ -16,6 +16,8 @@ using System.Buffers.Text;
 using Azure.Core;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using System.Net;
+using Google.Apis.Storage.v1.Data;
+using System.IO;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -197,7 +199,6 @@ namespace CoffeeHouseAPI.Controllers
             var bytes = Encoding.UTF8.GetBytes(csvContent);
             var fileName = "data.csv";
 
-            //return File(bytes, "text/csv", fileName);
             return Ok(File(bytes, "text/csv", fileName));
         }
 
@@ -223,6 +224,29 @@ namespace CoffeeHouseAPI.Controllers
 
             var records = csv.GetRecords<dynamic>().ToList();
             return Ok(records);
+        }
+
+        [HttpGet]
+        [Route("GetCsvFile")]
+        public IActionResult GetCsvFile()
+        {
+            string fileName = "BIS Seeburger EDI ITL integration EVN(SYM - SEEBURGER - EVN).csv";
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "File", fileName);
+            
+            if (!System.IO.File.Exists(path))
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message= "File không tồn tại.",
+                    Status = (int)HttpStatusCode.NotFound
+                });
+            }
+
+            byte[] fileBytes = System.IO.File.ReadAllBytes(path);
+            string contentType = "application/octet-stream";
+
+            return Ok(File(fileBytes, contentType, fileName));
         }
     }
 
