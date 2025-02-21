@@ -122,7 +122,7 @@ namespace CoffeeHouseAPI.Controllers
                                 }
 
                                 ToppingOrderDTO toppingOrder = new ToppingOrderDTO();
-                                toppingOrder.Id = cartDetail.Id;
+                                toppingOrder.Id = cartDetail.Topping.Id;
                                 toppingOrder.Quantity = cartDetail.Quantity ?? 1;
                                 toppingOrderDTOs.Add(toppingOrder);
                             }

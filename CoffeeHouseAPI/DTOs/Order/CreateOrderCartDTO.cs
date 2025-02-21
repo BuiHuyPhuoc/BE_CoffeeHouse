@@ -11,5 +11,8 @@ namespace CoffeeHouseAPI.DTOs.Order
 
         [Required]
         public int AddressId { get; set; }
+
+        [Required]
+        public decimal TotalPrice { get; set; }
     }
 }
