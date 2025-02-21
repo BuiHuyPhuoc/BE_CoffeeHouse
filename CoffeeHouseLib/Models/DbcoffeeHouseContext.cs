@@ -196,6 +196,7 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.Property(e => e.DateOfBirth).HasColumnType("datetime");
             entity.Property(e => e.FullName).HasMaxLength(255);
+            entity.Property(e => e.IsValid).HasDefaultValue(true);
             entity.Property(e => e.Phone).HasMaxLength(12);
         });
 
