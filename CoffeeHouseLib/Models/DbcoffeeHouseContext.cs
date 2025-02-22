@@ -47,8 +47,6 @@ public partial class DbcoffeeHouseContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
-    public virtual DbSet<ProductDiscount> ProductDiscounts { get; set; }
-
     public virtual DbSet<ProductSize> ProductSizes { get; set; }
 
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
@@ -196,6 +194,7 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.Property(e => e.DateOfBirth).HasColumnType("datetime");
             entity.Property(e => e.FullName).HasMaxLength(255);
+            entity.Property(e => e.IsValid).HasDefaultValue(true);
             entity.Property(e => e.Phone).HasMaxLength(12);
         });
 
@@ -283,10 +282,6 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.Property(e => e.Note).HasMaxLength(255);
 
-            entity.HasOne(d => d.Discount).WithMany(p => p.OrderDetails)
-                .HasForeignKey(d => d.DiscountId)
-                .HasConstraintName("FK__OrderDeta__Disco__76969D2E");
-
             entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -367,6 +362,10 @@ public partial class DbcoffeeHouseContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Product__Categor__7C4F7684");
 
+            entity.HasOne(d => d.Discount).WithMany(p => p.Products)
+                .HasForeignKey(d => d.DiscountId)
+                .HasConstraintName("FK__Product__Discoun__3B40CD36");
+
             entity.HasOne(d => d.ImageDefaultNavigation).WithMany(p => p.Products)
                 .HasForeignKey(d => d.ImageDefault)
                 .HasConstraintName("FK__Product__ImageDe__18EBB532");
@@ -405,27 +404,6 @@ public partial class DbcoffeeHouseContext : DbContext
                         j.ToTable("ProductTopping");
                         j.HasIndex(new[] { "ProductId", "ToppingId" }, "IX_ProductId_ToppingId");
                     });
-        });
-
-        modelBuilder.Entity<ProductDiscount>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__ProductD__3214EC070B4A8A23");
-
-            entity.ToTable("ProductDiscount");
-
-            entity.HasIndex(e => e.Id, "UQ__ProductD__3214EC06FEA3045E").IsUnique();
-
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-
-            entity.HasOne(d => d.Discount).WithMany(p => p.ProductDiscounts)
-                .HasForeignKey(d => d.DiscountId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ProductDi__Disco__7D439ABD");
-
-            entity.HasOne(d => d.Product).WithMany(p => p.ProductDiscounts)
-                .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ProductDi__Produ__7E37BEF6");
         });
 
         modelBuilder.Entity<ProductSize>(entity =>

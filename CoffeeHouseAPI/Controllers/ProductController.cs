@@ -27,8 +27,8 @@ namespace CoffeeHouseAPI.Controllers
         readonly IMapper _mapper;
         readonly FirebaseService _firebaseService;
 
-        public ProductController(DbcoffeeHouseContext context, 
-            IMapper mapper, 
+        public ProductController(DbcoffeeHouseContext context,
+            IMapper mapper,
             FirebaseService firebaseService,
             IProductService productService)
         {
@@ -128,14 +128,16 @@ namespace CoffeeHouseAPI.Controllers
         [Route("GetProductDetail")]
         public IActionResult GetProductDetail(int idProduct)
         {
-            var product = _context.Products
-                .Include(x => x.Toppings)
-                .Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.ProductDiscounts)
-                .Include(x => x.ProductSizes.OrderBy(y => y.Price))
-                .Include(x => x.Category)
-                .Include(x => x.Toppings)
-                .Where(x => x.Id == idProduct).AsNoTracking().FirstOrDefault();
+            //var product = _context.Products
+            //    .Include(x => x.Toppings)
+            //    .Include(x => x.ImageDefaultNavigation)
+            //    .Include(x => x.ProductDiscounts)
+            //    .Include(x => x.ProductSizes.OrderBy(y => y.Price))
+            //    .Include(x => x.Category)
+            //    .Include(x => x.Toppings)
+            //    .Where(x => x.Id == idProduct).AsNoTracking().FirstOrDefault();
+            var product = _productService.GetProductWithRelate(true).Where(x => x.Id == idProduct).FirstOrDefault();
+            
             if (product == null)
             {
                 return BadRequest(new APIResponseBase
@@ -145,7 +147,9 @@ namespace CoffeeHouseAPI.Controllers
                     Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
                 });
             }
+            
             var productDTO = _mapper.Map<ProductResponseDTO>(product);
+            
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
@@ -157,7 +161,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpGet]
         [Route("GetProductHomePage")]
-        public async Task<IActionResult> GetProductHomePage()
+        public IActionResult GetProductHomePage()
         {
             ProductHomePageDTO productHomePageDTO = new ProductHomePageDTO();
             var newestProducts = _productService.GetProductWithRelate()
@@ -165,10 +169,13 @@ namespace CoffeeHouseAPI.Controllers
                 .Take(5)
                 .ToList();
             productHomePageDTO.Newests = _mapper.Map<List<ProductResponseDTO>>(newestProducts);
+
             var saleProducts = _productService.GetProductWithRelate()
-                .Where(x => x.ProductDiscounts.Where(x => x.IsActive).ToList().Count != 0)
+                .Where(x => x.Discount != null)
                 .ToList();
+
             productHomePageDTO.Sales = _mapper.Map<List<ProductResponseDTO>>(saleProducts);
+
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
@@ -203,7 +210,8 @@ namespace CoffeeHouseAPI.Controllers
                     var products = GetProductWithRelate(true).Where(x => x.CategoryId == childCate.Id).ToList();
                     productResponseDTOs.AddRange(_mapper.Map<List<ProductResponseDTO>>(products));
                 }
-            } else
+            }
+            else
             {
                 var products = GetProductWithRelate(true).Where(x => x.CategoryId == category.Id).ToList();
                 productResponseDTOs.AddRange(_mapper.Map<List<ProductResponseDTO>>(products));
@@ -282,34 +290,35 @@ namespace CoffeeHouseAPI.Controllers
             );
         }
 
-        private List<Product> GetProductWithRelate(bool isTracking)
+        private List<Product> GetProductWithRelate(bool isNoTracking)
         {
-            if (isTracking)
+            var query = _context.Products
+                .Include(x => x.ImageDefaultNavigation)
+                .Include(x => x.Images)
+                .Include(x => x.Category)
+                .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
+                .Include(x => x.Toppings)
+                .Where(x => x.IsValid)
+                .Select(x => new Product
+                {
+                    Id = x.Id,
+                    ProductName = x.ProductName,
+                    Discount = x.Discount != null && x.Discount.IsActive ? x.Discount : null,
+                    ImageDefaultNavigation = x.ImageDefaultNavigation,
+                    Images = x.Images,
+                    Category = x.Category,
+                    ProductSizes = x.ProductSizes.Where(ps => ps.IsValid).OrderBy(ps => ps.Price).ToList(),
+                    Toppings = x.Toppings
+                });
+
+            if (isNoTracking)
             {
-                return _context.Products
-                    .Include(x => x.ProductDiscounts.Where(x => x.IsActive))
-                    .Include(x => x.ImageDefaultNavigation)
-                    .Include(x => x.Images)
-                    .Include(x => x.Category)
-                    .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
-                    .Include(x => x.Toppings)
-                    .Where(x => x.IsValid)
-                    .AsNoTracking()
-                    .ToList();
+                query = query.AsNoTracking();
             }
-            else
-            {
-                return _context.Products
-                    .Include(x => x.ProductDiscounts.Where(x => x.IsActive))
-                    .Include(x => x.ImageDefaultNavigation)
-                    .Include(x => x.Images)
-                    .Include(x => x.Category)
-                    .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
-                    .Include(x => x.Toppings)
-                    .Where(x => x.IsValid)
-                    .ToList();
-            }
+
+            return query.ToList();
         }
+
 
         private double CosineSimilarity(float[] vectorA, float[] vectorB)
         {

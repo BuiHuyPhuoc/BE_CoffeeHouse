@@ -13,11 +13,7 @@ public partial class OrderDetail
 
     public string? Note { get; set; }
 
-    public int? DiscountId { get; set; }
-
     public int? Quantity { get; set; }
-
-    public virtual Discount? Discount { get; set; }
 
     public virtual Order Order { get; set; } = null!;
 

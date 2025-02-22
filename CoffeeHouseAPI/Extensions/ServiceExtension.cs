@@ -1,4 +1,5 @@
 ﻿using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.Services.AddressService;
 using CoffeeHouseAPI.Services.Email;
 using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseAPI.Services.ProductService;
@@ -49,6 +50,7 @@ namespace CoffeeHouseAPI.Extensions
 
             services.AddScoped<IVoucherService, VoucherService>();
             services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<IAddressService, AddressService>();
         }
     }
 }

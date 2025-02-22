@@ -10,25 +10,39 @@ namespace CoffeeHouseAPI.Services.ProductService
     public class ProductService : IProductService
     {
         readonly DbcoffeeHouseContext _context;
-        readonly IMapper _mapper;
 
         public ProductService(DbcoffeeHouseContext context, IMapper mapper)
         {
             _context = context;
-            _mapper = mapper;
         }
 
-        public List<Product> GetProductWithRelate()
+        public List<Product> GetProductWithRelate(bool isNoTracking = false)
         {
-            return _context.Products
-                .Include(x => x.Toppings.Where(x => x.IsValid))
+            var query = _context.Products
                 .Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.ProductDiscounts.Where(x => x.IsActive && x.Discount.IsActive)).ThenInclude(x => x.Discount)
-                .Include(x => x.ProductSizes.OrderBy(y => y.Price).Where(y => y.IsValid))
+                .Include(x => x.Images)
                 .Include(x => x.Category)
+                .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
+                .Include(x => x.Toppings)
                 .Where(x => x.IsValid)
-                .AsNoTracking()
-                .ToList();
+                .Select(x => new Product
+                {
+                    Id = x.Id,
+                    ProductName = x.ProductName,
+                    Discount = x.Discount != null && x.Discount.IsActive ? x.Discount : null,
+                    ImageDefaultNavigation = x.ImageDefaultNavigation,
+                    Images = x.Images,
+                    Category = x.Category,
+                    ProductSizes = x.ProductSizes.Where(ps => ps.IsValid).OrderBy(ps => ps.Price).ToList(),
+                    Toppings = x.Toppings
+                });
+
+            if (isNoTracking)
+            {
+                query = query.AsNoTracking();
+            }
+
+            return query.ToList();
         }
     }
 }

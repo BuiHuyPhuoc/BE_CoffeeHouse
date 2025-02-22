@@ -72,7 +72,6 @@ namespace CoffeeHouseAPI.Controllers
                 return BadRequest(new APIResponseBase
                 {
                     Status = (int)StatusCodes.Status400BadRequest,
-                    Value = null,
                     Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.PUT),
                     IsSuccess = false
                 });

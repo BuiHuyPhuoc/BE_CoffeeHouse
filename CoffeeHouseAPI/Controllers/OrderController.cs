@@ -5,6 +5,7 @@ using CoffeeHouseAPI.DTOs.Order;
 using CoffeeHouseAPI.DTOs.Topping;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
 using CoffeeHouseLib.Models;
 using Google.Apis.Util;
@@ -24,13 +25,15 @@ namespace CoffeeHouseAPI.Controllers
     {
         readonly DbcoffeeHouseContext _context;
         readonly IVoucherService _voucherService;
+        readonly IProductService _productService;
         readonly IMapper _mapper;
 
-        public OrderController(DbcoffeeHouseContext context, IVoucherService voucherService, IMapper mapper)
+        public OrderController(DbcoffeeHouseContext context,IProductService productService, IVoucherService voucherService, IMapper mapper)
         {
             _mapper = mapper;
             _context = context;
             _voucherService = voucherService;
+            _productService = productService;
         }
 
         [HttpPost]
@@ -267,17 +270,16 @@ namespace CoffeeHouseAPI.Controllers
             foreach (var orderDetail in orderDetails)
             {
                 var productSize = _context.ProductSizes
-                    .Include(x => x.Product).ThenInclude(y => y.ProductDiscounts)
+                    .Include(x => x.Product).ThenInclude(y => y.Discount)
                     .FirstOrDefault(x => x.Id == orderDetail.ProductSizeId && x.IsValid);
 
                 if (productSize == null)
                     throw new BaseException("Sản phẩm không tồn tại");
 
-                var discount = productSize.Product.ProductDiscounts.FirstOrDefault(x => x.IsActive);
+                var discount = productSize.Product.Discount;
                 OrderDetail newOrderDetail = new OrderDetail
                 {
                     OrderId = orderId,
-                    DiscountId = discount?.DiscountId,
                     ProductSizeId = productSize.Id,
                     Note = orderDetail.Note,
                     Quantity = orderDetail.Quantity

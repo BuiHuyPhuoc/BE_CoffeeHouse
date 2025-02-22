@@ -105,7 +105,7 @@ namespace CoffeeHouseAPI.Controllers
         [HttpGet]
         [Route("GetCart")]
         [MasterAuth]
-        public async Task<IActionResult> GetCart()
+        public IActionResult GetCart()
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
             var carts = GetCartBy(loginResponse.Id, false);

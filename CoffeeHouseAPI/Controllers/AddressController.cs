@@ -3,8 +3,10 @@ using CoffeeHouseAPI.DTOs.Address;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.Services.AddressService;
 using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseLib.Models;
+using Google.Apis.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,12 +23,14 @@ namespace CoffeeHouseAPI.Controllers
         readonly DbcoffeeHouseContext _context;
         readonly IMapper _mapper;
         readonly FirebaseService _firebaseService;
+        readonly IAddressService _addressService;
 
-        public AddressController(DbcoffeeHouseContext context, IMapper mapper, FirebaseService firebaseService)
+        public AddressController(DbcoffeeHouseContext context, IMapper mapper, FirebaseService firebaseService, IAddressService addressService)
         {
             _context = context;
             _mapper = mapper;
             _firebaseService = firebaseService;
+            _addressService = addressService;
         }
 
         [HttpGet]
@@ -35,7 +39,7 @@ namespace CoffeeHouseAPI.Controllers
         {
             var loginResponse = GetLoginResponseFromHttpContext();
 
-            var addresses = _context.Addresses.Where(x => x.CustomerId == loginResponse.Id && x.IsValid).ToList();
+            var addresses = _addressService.GetAddressWithRelate().Where(x => x.CustomerId == loginResponse.Id);
 
             var addressDTOs = _mapper.Map<List<AddressDTO>>(addresses);
 
@@ -56,7 +60,9 @@ namespace CoffeeHouseAPI.Controllers
 
             request.CustomerId = loginResponse.Id;
 
-            var currentDefaultAddress = await _context.Addresses.Where(x => x.CustomerId == loginResponse.Id && x.IsDefault && x.IsValid).FirstOrDefaultAsync();
+            var currentDefaultAddress = _addressService.GetAddressWithRelate()
+                                .Where(x => x.CustomerId == loginResponse.Id && x.IsDefault)
+                                .FirstOrDefault();
 
             if (currentDefaultAddress != null && request.IsDefault == true)
             {
@@ -64,8 +70,7 @@ namespace CoffeeHouseAPI.Controllers
                 currentDefaultAddress.IsDefault = false;
                 await this.SaveChanges(_context);
             }
-
-            request.IsValid = true;
+            
             var address = _mapper.Map<Address>(request);
 
             _context.Addresses.Add(address);
@@ -84,7 +89,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPost]
         [Route("UpdateAddress")]
-        public async Task<IActionResult> UpdateAddress(int addressId, [FromBody]AddressDTO request)
+        public async Task<IActionResult> UpdateAddress(int addressId, [FromBody] AddressDTO request)
         {
             var address = await _context.Addresses.Where(x => x.Id == addressId && x.IsValid).FirstOrDefaultAsync();
             var loginResponse = this.GetLoginResponseFromHttpContext();
@@ -99,21 +104,24 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            address.AddressNumber = request.AddressNumber;
-            address.CustomerId = loginResponse.Id;
-            address.PhoneNumber = request.PhoneNumber;
-            address.FullName = request.FullName;
+            address.IsValid = false;
+            await this.SaveChanges(_context);
+
+            request.Id = null;
+            Address newAddress = _mapper.Map<Address>(request);
 
             if (address.IsDefault == true && request.IsDefault == false)
             {
                 var nonDefaultAddress = _context.Addresses.Where(x => x.IsDefault == false && x.CustomerId == loginResponse.Id && x.IsValid).FirstOrDefault();
 
-                if (nonDefaultAddress == null) throw new Exception();
-
-                nonDefaultAddress.IsDefault = true;
-                await this.SaveChanges(_context);
+                if (nonDefaultAddress != null)
+                {
+                    nonDefaultAddress.IsDefault = true;
+                    await this.SaveChanges(_context);
+                }
             }
-            else if (address.IsDefault == false && request.IsDefault == true) { 
+            else if (address.IsDefault == false && request.IsDefault == true)
+            {
                 var defaultAddress = _context.Addresses.Where(x => x.IsDefault == true && x.CustomerId == loginResponse.Id && x.IsValid).FirstOrDefault();
 
                 if (defaultAddress != null)
@@ -123,8 +131,7 @@ namespace CoffeeHouseAPI.Controllers
                 }
             }
 
-            address.IsDefault = request.IsDefault;
-            address.IsValid = true;
+            _context.Addresses.Add(newAddress);
             await this.SaveChanges(_context);
 
             return Ok(new APIResponseBase
@@ -140,9 +147,10 @@ namespace CoffeeHouseAPI.Controllers
         public async Task<IActionResult> DeleteAddress(int addressId)
         {
             var loginResponse = this.GetLoginResponseFromHttpContext();
-            var address = _context.Addresses.Where(x => x.Id == addressId && loginResponse.Id == x.CustomerId && x.IsValid).FirstOrDefault();
-            
-            if (address == null) {
+            var address = _addressService.GetAddressWithRelate().Where(x => x.CustomerId == loginResponse.Id && x.Id == addressId).FirstOrDefault();
+
+            if (address == null)
+            {
                 return BadRequest(new APIResponseBase
                 {
                     IsSuccess = false,
@@ -153,7 +161,7 @@ namespace CoffeeHouseAPI.Controllers
 
             if (address.IsDefault)
             {
-                return BadRequest( new APIResponseBase
+                return BadRequest(new APIResponseBase
                 {
                     IsSuccess = false,
                     Status = (int)HttpStatusCode.BadRequest,
