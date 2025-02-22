@@ -1,0 +1,6 @@
+services:
+  coffeehouseapi:
+    image: ${DOCKER_REGISTRY-}coffeehouseapi
+    build:
+      context: .
+      dockerfile: CoffeeHouseAPI/Dockerfile
