@@ -58,4 +58,4 @@ jobs:
       - name: Remove old container
         run: docker rm my_app || true
       - name: Run image
-        run: docker run -d -p 8080:8080 --name my_app phuoc194203/init:v1
+        run: docker run -d --name my_app -p 8080:8080 -v myapp_file:/app/files phuoc194203/init:v1
