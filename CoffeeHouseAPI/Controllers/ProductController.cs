@@ -38,6 +38,11 @@ namespace CoffeeHouseAPI.Controllers
             _productService = productService;
         }
 
+        /// <summary>
+        /// Last test: 22/2/2025
+        /// </summary>
+        /// <param name="quantity"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("GetProduct")]
         public IActionResult GetProduct(int? quantity)
@@ -101,6 +106,7 @@ namespace CoffeeHouseAPI.Controllers
             // Add product
             newProduct.Images = images;
             newProduct.ImageDefaultNavigation = imageDefault;
+            newProduct.CreatedAt = DateTime.Now;
             _context.Products.Add(newProduct);
             await this.SaveChanges(_context);
 
