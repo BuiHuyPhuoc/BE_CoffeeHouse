@@ -38,17 +38,8 @@ namespace OrderService.Helper
 
             CreateMap<Product, ProductRequestDTO>();
             CreateMap<ProductRequestDTO, Product>();
-            CreateMap<Product, ProductResponseDTO>()
-                .ForMember(dest => dest.Discounts, opt => opt.MapFrom(src =>
-                    src.ProductDiscounts.Where(pd => pd.IsActive).Select(pd => pd.Discount)
-                ));
+            CreateMap<Product, ProductResponseDTO>();
             CreateMap<ProductResponseDTO, Product>();
-
-            //CreateMap<Image, ImageRequestDTO>()
-            //    .ForMember(d => d.Content, option => option.MapFrom(s => Convert.ToBase64String(s.Content)));
-
-            //CreateMap<ImageRequestDTO, Image>()
-            //    .ForMember(d => d.Content, option => option.MapFrom(s => Convert.FromBase64String(s.Content.Base64Encode())));
 
             CreateMap<Image, ImageResponseDTO>();
             CreateMap<ImageResponseDTO, Image>();

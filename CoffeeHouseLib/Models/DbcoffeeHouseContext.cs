@@ -282,10 +282,6 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.Property(e => e.Note).HasMaxLength(255);
 
-            entity.HasOne(d => d.Discount).WithMany(p => p.OrderDetails)
-                .HasForeignKey(d => d.DiscountId)
-                .HasConstraintName("FK__OrderDeta__Disco__76969D2E");
-
             entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)

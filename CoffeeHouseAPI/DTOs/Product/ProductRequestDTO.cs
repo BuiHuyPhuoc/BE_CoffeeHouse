@@ -42,6 +42,6 @@ namespace CoffeeHouseAPI.DTOs.Product
 
         public List<ToppingDTO> Toppings { get; set; } = new List<ToppingDTO>();
 
-        public List<DiscountDTO> Discounts { get; set; } = new List<DiscountDTO>();
+        public DiscountDTO? Discount { get; set; }
     }
 }
