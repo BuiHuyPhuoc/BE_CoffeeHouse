@@ -22,7 +22,7 @@ jobs:
 
       # Restore dependencies cho dự án trong thư mục CoffeeHouseAPI
       - name: Restore dependencies
-        run: dotnet restore .
+        run: dotnet restore CoffeeHouseAPI.sln
 
       # Build dự án ASP.NET trong thư mục CoffeeHouseAPI
       - name: Build CoffeeHouseLib
