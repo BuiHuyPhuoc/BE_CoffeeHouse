@@ -21,8 +21,8 @@ jobs:
           dotnet-version: '8.0' # Thay đổi theo version .NET của bạn
 
       # Restore dependencies cho dự án trong thư mục CoffeeHouseAPI
-      - name: Restore dependencies
-        run: dotnet restore CoffeeHouseAPI.sln
+      - name: Restore dependencies for API project
+        run: dotnet restore CoffeeHouseAPI/CoffeeHouseAPI.csproj
 
       # Build dự án ASP.NET trong thư mục CoffeeHouseAPI
       - name: Build CoffeeHouseLib
