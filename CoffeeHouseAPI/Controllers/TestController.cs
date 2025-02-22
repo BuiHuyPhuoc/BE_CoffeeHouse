@@ -18,6 +18,7 @@ using CoffeeHouseAPI.DTOs.APIPayload;
 using System.Net;
 using Google.Apis.Storage.v1.Data;
 using System.IO;
+using System.Linq;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -75,7 +76,7 @@ namespace CoffeeHouseAPI.Controllers
                 return BadRequest("Dữ liệu Base64 không hợp lệ.");
             }
 
-            
+
             byte[] csvBytes;
 
             try
@@ -92,7 +93,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            
+
             string csvContent = Encoding.UTF8.GetString(csvBytes);
 
             using var reader = new StringReader(csvContent);
@@ -232,13 +233,13 @@ namespace CoffeeHouseAPI.Controllers
         {
             string fileName = "BIS Seeburger EDI ITL integration EVN(SYM - SEEBURGER - EVN).csv";
             string path = Path.Combine(Directory.GetCurrentDirectory(), "File", fileName);
-            
+
             if (!System.IO.File.Exists(path))
             {
                 return BadRequest(new APIResponseBase
                 {
                     IsSuccess = false,
-                    Message= "File không tồn tại.",
+                    Message = "File không tồn tại.",
                     Status = (int)HttpStatusCode.NotFound
                 });
             }
@@ -248,6 +249,38 @@ namespace CoffeeHouseAPI.Controllers
 
             return Ok(File(fileBytes, contentType, fileName));
         }
+
+        [HttpGet]
+        [Route("GetCsvJson")]
+        public IActionResult GetCsvJson()
+        {
+            string fileName = "BIS Seeburger EDI ITL integration EVN(SYM - SEEBURGER - EVN).csv";
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "File", fileName);
+
+            if (!System.IO.File.Exists(path))
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "File không tồn tại.",
+                    Status = (int)HttpStatusCode.NotFound
+                });
+            }
+
+            using var reader = new StreamReader(path);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                TrimOptions = TrimOptions.Trim,
+                Delimiter = ",",
+                BadDataFound = null
+            });
+
+            var records = csv.GetRecords<dynamic>().ToList();
+
+            return Ok(records);
+        }
+
     }
 
     public class Base64String
