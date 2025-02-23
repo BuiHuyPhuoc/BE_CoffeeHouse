@@ -255,7 +255,7 @@ namespace CoffeeHouseAPI.Controllers
         public IActionResult GetCsvJson()
         {
             string fileName = "BIS Seeburger EDI ITL integration EVN(SYM - SEEBURGER - EVN).csv";
-            string path = Path.Combine("/app/files", fileName);
+            string path = Path.Combine("/app/File", fileName);
             Console.WriteLine($"Current Directory: {Directory.GetCurrentDirectory()}");
             if (!System.IO.File.Exists(path))
             {
