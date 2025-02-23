@@ -62,6 +62,11 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 22/2/2025
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("AddProduct")]
         public async Task<IActionResult> AddProduct([FromBody] ProductRequestDTO request)
@@ -130,19 +135,18 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 24/2/2024
+        /// </summary>
+        /// <param name="idProduct"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("GetProductDetail")]
         public IActionResult GetProductDetail(int idProduct)
         {
-            //var product = _context.Products
-            //    .Include(x => x.Toppings)
-            //    .Include(x => x.ImageDefaultNavigation)
-            //    .Include(x => x.ProductDiscounts)
-            //    .Include(x => x.ProductSizes.OrderBy(y => y.Price))
-            //    .Include(x => x.Category)
-            //    .Include(x => x.Toppings)
-            //    .Where(x => x.Id == idProduct).AsNoTracking().FirstOrDefault();
-            var product = _productService.GetProductWithRelate(true).Where(x => x.Id == idProduct).FirstOrDefault();
+            var product = _productService.GetProductWithRelate(true)
+                            .Where(x => x.Id == idProduct)
+                            .FirstOrDefault();
             
             if (product == null)
             {

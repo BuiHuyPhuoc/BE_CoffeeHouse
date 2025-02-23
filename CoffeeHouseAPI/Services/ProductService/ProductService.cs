@@ -34,7 +34,13 @@ namespace CoffeeHouseAPI.Services.ProductService
                     Images = x.Images,
                     Category = x.Category,
                     ProductSizes = x.ProductSizes.Where(ps => ps.IsValid).OrderBy(ps => ps.Price).ToList(),
-                    Toppings = x.Toppings
+                    Toppings = x.Toppings,
+                    CategoryId = x.Category.Id,
+                    CreatedAt = x.CreatedAt,
+                    Description = x.Description,
+                    Description2 = x.Description2,
+                    IsValid = x.IsValid,
+                    Material = x.Material
                 });
 
             if (isNoTracking)
