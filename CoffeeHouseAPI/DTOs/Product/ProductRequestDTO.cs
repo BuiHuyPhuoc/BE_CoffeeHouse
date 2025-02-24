@@ -22,6 +22,8 @@ namespace CoffeeHouseAPI.DTOs.Product
         public string? Description2 { get; set; }
 
         public string? Material { get; set; }
+
+        public DiscountDTO? Discount { get; set; }
     }
     public class ProductRequestDTO : ProductModel
     {
@@ -45,7 +47,5 @@ namespace CoffeeHouseAPI.DTOs.Product
         public ImageResponseDTO ImageDefaultNavigation { get; set; } = null!;
 
         public List<ToppingDTO> Toppings { get; set; } = new List<ToppingDTO>();
-
-        public DiscountDTO? Discount { get; set; }
     }
 }
