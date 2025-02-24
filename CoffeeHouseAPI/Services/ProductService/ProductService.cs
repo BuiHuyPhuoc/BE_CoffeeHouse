@@ -24,18 +24,8 @@ namespace CoffeeHouseAPI.Services.ProductService
                 .Include(x => x.Category)
                 .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
                 .Include(x => x.Toppings)
-                .Where(x => x.IsValid)
-                .Select(x => new Product
-                {
-                    Id = x.Id,
-                    ProductName = x.ProductName,
-                    Discount = x.Discount != null && x.Discount.IsActive ? x.Discount : null,
-                    ImageDefaultNavigation = x.ImageDefaultNavigation,
-                    Images = x.Images,
-                    Category = x.Category,
-                    ProductSizes = x.ProductSizes.Where(ps => ps.IsValid).OrderBy(ps => ps.Price).ToList(),
-                    Toppings = x.Toppings
-                });
+                .Include(x => x.Reviews)
+                .Where(x => x.IsValid);
 
             if (isNoTracking)
             {

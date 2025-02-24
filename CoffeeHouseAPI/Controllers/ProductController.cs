@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using CoffeeHouseAPI.DTOs.AI;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Category;
@@ -62,6 +63,11 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 22/2/2025
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("AddProduct")]
         public async Task<IActionResult> AddProduct([FromBody] ProductRequestDTO request)
@@ -82,68 +88,45 @@ namespace CoffeeHouseAPI.Controllers
                     Status = (int)StatusCodes.Status400BadRequest
                 });
 
-            var newProduct = _mapper.Map<Product>(request);
-            newProduct.Images = new List<Image>();
-
-            // Add image to firebase
-            List<Image> images = _mapper.Map<List<Image>>(request.Images);
-            for (int i = 0; i < request.Images.Count; i++)
+            if (request.Discount != null)
             {
-                string url = await _firebaseService.UploadImageAsync(request.Images[i]);
-                images[i].FirebaseImage = url;
+                var discount = _context.Discounts.Where(x => x.Id == request.Discount.Id && x.IsActive).FirstOrDefault();
+
+                if (discount == null)
+                {
+                    return BadRequest(new APIResponseBase
+                    {
+                        IsSuccess = false,
+                        Message = "Mã giảm giá sản phẩm không tồn tại.",
+                        Status = (int)StatusCodes.Status400BadRequest
+                    });
+                }
             }
 
-            // Add default image to firebase
-            Image imageDefault = _mapper.Map<Image>(request.ImageDefaultNavigation);
-            string urlImageDefault = await _firebaseService.UploadImageAsync(request.ImageDefaultNavigation);
-            imageDefault.FirebaseImage = urlImageDefault;
-
-            // Add image to database
-            _context.Images.AddRange(images);
-            _context.Images.Add(imageDefault);
-            await this.SaveChanges(_context);
-
-            // Add product
-            newProduct.Images = images;
-            newProduct.ImageDefaultNavigation = imageDefault;
-            newProduct.CreatedAt = DateTime.Now;
-            _context.Products.Add(newProduct);
-            await this.SaveChanges(_context);
-
-            //// Add product size
-            //List<ProductSize> productSizes = _mapper.Map<List<ProductSize>>(request.ProductSizes);
-            //foreach (var productSize in productSizes)
-            //{
-            //    productSize.ProductId = newProduct.Id;
-            //}
-            //_context.ProductSizes.AddRange(productSizes);
-            //await this.SaveChanges(_context);
-
-            var productDTO = _mapper.Map<ProductResponseDTO>(newProduct);
+            await AddNewProduct(request);
 
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
                 Status = (int)StatusCodes.Status200OK,
                 Message = "Add product success",
-                Value = productDTO
+                Value = request
             });
         }
 
+        /// <summary>
+        /// Last test: 24/2/2024
+        /// </summary>
+        /// <param name="idProduct"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("GetProductDetail")]
         public IActionResult GetProductDetail(int idProduct)
         {
-            //var product = _context.Products
-            //    .Include(x => x.Toppings)
-            //    .Include(x => x.ImageDefaultNavigation)
-            //    .Include(x => x.ProductDiscounts)
-            //    .Include(x => x.ProductSizes.OrderBy(y => y.Price))
-            //    .Include(x => x.Category)
-            //    .Include(x => x.Toppings)
-            //    .Where(x => x.Id == idProduct).AsNoTracking().FirstOrDefault();
-            var product = _productService.GetProductWithRelate(true).Where(x => x.Id == idProduct).FirstOrDefault();
-            
+            var product = _productService.GetProductWithRelate(true)
+                            .Where(x => x.Id == idProduct)
+                            .FirstOrDefault();
+
             if (product == null)
             {
                 return BadRequest(new APIResponseBase
@@ -153,9 +136,9 @@ namespace CoffeeHouseAPI.Controllers
                     Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET)
                 });
             }
-            
+
             var productDTO = _mapper.Map<ProductResponseDTO>(product);
-            
+
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
@@ -191,6 +174,11 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 24/2/2025
+        /// </summary>
+        /// <param name="cateogryId"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("GetProductByCategory")]
         public async Task<IActionResult> GetProductByCategory(int cateogryId)
@@ -213,13 +201,13 @@ namespace CoffeeHouseAPI.Controllers
             {
                 foreach (var childCate in category.InverseIdParentNavigation)
                 {
-                    var products = GetProductWithRelate(true).Where(x => x.CategoryId == childCate.Id).ToList();
+                    var products = _productService.GetProductWithRelate(true).Where(x => x.CategoryId == childCate.Id).ToList();
                     productResponseDTOs.AddRange(_mapper.Map<List<ProductResponseDTO>>(products));
                 }
             }
             else
             {
-                var products = GetProductWithRelate(true).Where(x => x.CategoryId == category.Id).ToList();
+                var products = _productService.GetProductWithRelate(true).Where(x => x.CategoryId == category.Id).ToList();
                 productResponseDTOs.AddRange(_mapper.Map<List<ProductResponseDTO>>(products));
             }
 
@@ -232,11 +220,16 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 24/2/2025
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("GetRecommendProduct")]
-        public async Task<IActionResult> GetRecommendProduct(int productId)
+        public IActionResult GetRecommendProduct(int productId)
         {
-            var exampleProduct = _context.Products.Where(x => x.Id == productId && x.IsValid).FirstOrDefault();
+            var exampleProduct = _productService.GetProductWithRelate(true).Where(x => x.Id == productId).FirstOrDefault();
             if (exampleProduct == null)
             {
                 return BadRequest(
@@ -249,12 +242,9 @@ namespace CoffeeHouseAPI.Controllers
                 );
             }
 
-            var products = await _context.Products
-                .Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.ProductSizes.OrderBy(y => y.Price))
-                .Include(x => x.Category)
-                .Where(x => x.IsValid == true && x.Description2 != null)
-                .ToListAsync();
+            var products = _productService.GetProductWithRelate(true)
+                            .Where(x => x.Description2 != null)
+                            .ToList();
 
             var mlContext = new MLContext();
 
@@ -296,36 +286,105 @@ namespace CoffeeHouseAPI.Controllers
             );
         }
 
-        private List<Product> GetProductWithRelate(bool isNoTracking)
+        /// <summary>
+        /// Last test: 24/2/2025
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPut]
+        [Route(nameof(UpdateProduct))]
+        public async Task<IActionResult> UpdateProduct([FromQuery] int id, [FromBody] ProductRequestDTO request)
         {
-            var query = _context.Products
-                .Include(x => x.ImageDefaultNavigation)
-                .Include(x => x.Images)
-                .Include(x => x.Category)
-                .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
-                .Include(x => x.Toppings)
-                .Where(x => x.IsValid)
-                .Select(x => new Product
-                {
-                    Id = x.Id,
-                    ProductName = x.ProductName,
-                    Discount = x.Discount != null && x.Discount.IsActive ? x.Discount : null,
-                    ImageDefaultNavigation = x.ImageDefaultNavigation,
-                    Images = x.Images,
-                    Category = x.Category,
-                    ProductSizes = x.ProductSizes.Where(ps => ps.IsValid).OrderBy(ps => ps.Price).ToList(),
-                    Toppings = x.Toppings
-                });
+            var product = _productService.GetProductWithRelate().Where(x => x.Id == id).FirstOrDefault();
 
-            if (isNoTracking)
+            if (product == null)
             {
-                query = query.AsNoTracking();
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Sản phẩm không tồn tại.",
+                    Status = (int)StatusCodes.Status400BadRequest
+                });
             }
 
-            return query.ToList();
+            if (request.Images.Count == 0)
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Insert at least one images",
+                    Status = (int)StatusCodes.Status400BadRequest
+                });
+
+            if (request.ProductSizes.Count == 0)
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Insert at least one sizes",
+                    Status = (int)StatusCodes.Status400BadRequest
+                });
+
+            if (request.Discount != null)
+            {
+                var discount = _context.Discounts.Where(x => x.Id == request.Discount.Id && x.IsActive).FirstOrDefault();
+
+                if (discount == null)
+                {
+                    return BadRequest(new APIResponseBase
+                    {
+                        IsSuccess = false,
+                        Message = "Mã giảm giá sản phẩm không tồn tại.",
+                        Status = (int)StatusCodes.Status400BadRequest
+                    });
+                }
+            }
+
+            await AddNewProduct(request);
+
+            // Disable old product
+            product.IsValid = false;
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)StatusCodes.Status200OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
+                Value = request
+            });
         }
 
+        private async Task AddNewProduct(ProductRequestDTO request)
+        {
+            var newProduct = _mapper.Map<Product>(request);
+            newProduct.Images = new List<Image>();
 
+            // Add image to firebase
+            List<Image> images = _mapper.Map<List<Image>>(request.Images);
+            for (int i = 0; i < request.Images.Count; i++)
+            {
+                string url = await _firebaseService.UploadImageAsync(request.Images[i]);
+                images[i].FirebaseImage = url;
+            }
+
+            // Add default image to firebase
+            Image imageDefault = _mapper.Map<Image>(request.ImageDefaultNavigation);
+            string urlImageDefault = await _firebaseService.UploadImageAsync(request.ImageDefaultNavigation);
+            imageDefault.FirebaseImage = urlImageDefault;
+
+            // Add image to database
+            _context.Images.AddRange(images);
+            _context.Images.Add(imageDefault);
+            await this.SaveChanges(_context);
+
+            // Add product
+            newProduct.Images = images;
+            newProduct.ImageDefaultNavigation = imageDefault;
+            newProduct.CreatedAt = DateTime.Now;
+
+            _context.Products.Add(newProduct);
+            await this.SaveChanges(_context);
+        }
         private double CosineSimilarity(float[] vectorA, float[] vectorB)
         {
             double dotProduct = 0.0;

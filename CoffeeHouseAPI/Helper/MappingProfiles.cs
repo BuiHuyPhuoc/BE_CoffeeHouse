@@ -7,6 +7,7 @@ using CoffeeHouseAPI.DTOs.Discount;
 using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseAPI.DTOs.Product;
 using CoffeeHouseAPI.DTOs.ProductSize;
+using CoffeeHouseAPI.DTOs.Review;
 using CoffeeHouseAPI.DTOs.Topping;
 using CoffeeHouseAPI.DTOs.Voucher;
 using CoffeeHouseAPI.Helper;
@@ -60,6 +61,9 @@ namespace OrderService.Helper
 
             CreateMap<Discount, DiscountDTO>();
             CreateMap<DiscountDTO, Discount>();
+
+            CreateMap<ReviewDTO, Review>();
+            CreateMap<Review, ReviewDTO>();
         }
     }
 }
