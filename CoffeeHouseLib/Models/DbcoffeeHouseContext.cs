@@ -333,6 +333,11 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.HasIndex(e => e.ToppingId, "IX_OrderTopping_ToppingId");
 
+            entity.HasOne(d => d.OrderDetail).WithMany(p => p.OrderToppings)
+                .HasForeignKey(d => d.OrderDetailId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__OrderTopp__Order__4D5F7D71");
+
             entity.HasOne(d => d.Topping).WithMany(p => p.OrderToppings)
                 .HasForeignKey(d => d.ToppingId)
                 .OnDelete(DeleteBehavior.ClientSetNull)

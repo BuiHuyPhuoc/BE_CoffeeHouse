@@ -17,5 +17,7 @@ public partial class OrderDetail
 
     public virtual Order Order { get; set; } = null!;
 
+    public virtual ICollection<OrderTopping> OrderToppings { get; set; } = new List<OrderTopping>();
+
     public virtual ProductSize ProductSize { get; set; } = null!;
 }

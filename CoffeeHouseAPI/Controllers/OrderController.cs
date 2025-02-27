@@ -255,6 +255,12 @@ namespace CoffeeHouseAPI.Controllers
             }
         }
 
+        [HttpGet]
+        public IActionResult GetAllOrder()
+        {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+        }
+
         private async Task CreateOrderStatus(int id, string v)
         {
             OrderLog orderLog = new OrderLog();

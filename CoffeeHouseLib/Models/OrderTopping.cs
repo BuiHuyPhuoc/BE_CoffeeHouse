@@ -11,5 +11,7 @@ public partial class OrderTopping
 
     public int OrderDetailId { get; set; }
 
+    public virtual OrderDetail OrderDetail { get; set; } = null!;
+
     public virtual Topping Topping { get; set; } = null!;
 }
