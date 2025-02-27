@@ -3,12 +3,11 @@ using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.AddressService;
 using CoffeeHouseAPI.Services.Email;
 using CoffeeHouseAPI.Services.Firebase;
+using CoffeeHouseAPI.Services.OrderService;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
-using OrderService.Helper;
 
 namespace CoffeeHouseAPI.Extensions
 {
@@ -61,6 +60,7 @@ namespace CoffeeHouseAPI.Extensions
             services.AddScoped<IVoucherService, VoucherService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IAddressService, AddressService>();
+            services.AddScoped<IOrderService, OrderService>();
         }
     }
 }

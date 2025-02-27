@@ -5,6 +5,7 @@ using CoffeeHouseAPI.DTOs.Order;
 using CoffeeHouseAPI.DTOs.Topping;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.Services.OrderService;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
 using CoffeeHouseLib.Models;
@@ -27,13 +28,15 @@ namespace CoffeeHouseAPI.Controllers
         readonly IVoucherService _voucherService;
         readonly IProductService _productService;
         readonly IMapper _mapper;
+        private readonly IOrderService _orderService;
 
-        public OrderController(DbcoffeeHouseContext context,IProductService productService, IVoucherService voucherService, IMapper mapper)
+        public OrderController(DbcoffeeHouseContext context,IProductService productService, IVoucherService voucherService, IMapper mapper, IOrderService orderService)
         {
             _mapper = mapper;
             _context = context;
             _voucherService = voucherService;
             _productService = productService;
+            _orderService = orderService;
         }
 
         [HttpPost]

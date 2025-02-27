@@ -15,7 +15,7 @@ using CoffeeHouseAPI.DTOs.Voucher;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseLib.Models;
 
-namespace OrderService.Helper
+namespace CoffeeHouseAPI.Helper
 {
     public class MappingProfiles : Profile
     {
