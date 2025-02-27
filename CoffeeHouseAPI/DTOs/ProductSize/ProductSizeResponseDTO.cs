@@ -16,6 +16,6 @@ namespace CoffeeHouseAPI.DTOs.ProductSize
 
         public bool IsValid { get; set; }
 
-        public ProductResponseDTO Product { get; set; } = null!;
+        public ProductModel Product { get; set; } = null!;
     }
 }

@@ -54,6 +54,12 @@ namespace CoffeeHouseAPI.Helper
             CreateMap<ProductSize, ProductResponseDTO>();
             CreateMap<ProductResponseDTO, ProductSize>();
 
+            CreateMap<ProductModel, Product>();
+            CreateMap<Product, ProductModel>();
+
+            CreateMap<ProductSize, ProductSizeResponseDTO>();
+            CreateMap<ProductSizeResponseDTO, ProductSize>();
+
 
             // Create mapping profile for ADDRESS
             CreateMap<AddressDTO, Address>();
@@ -91,7 +97,8 @@ namespace CoffeeHouseAPI.Helper
             CreateMap<OrderDetail, OrderDetailDTO>();
             CreateMap<OrderDetailDTO, OrderDetail>();
 
-            CreateMap<Order, OrderResponseDTO>();
+            CreateMap<Order, OrderResponseDTO>()
+                .ForMember(dest => dest.OrderDetails, opt => opt.MapFrom(src => src.OrderDetails));
             CreateMap<OrderResponseDTO, Order>();
 
             CreateMap<OrderLog, OrderLogDTO>();
@@ -101,7 +108,10 @@ namespace CoffeeHouseAPI.Helper
             CreateMap<OrderResponseDTO, Order>();
 
             CreateMap<OrderStatus, OrderStatusDTO>();
-            CreateMap<OrderStatusDTO, OrderStatus>(); 
+            CreateMap<OrderStatusDTO, OrderStatus>();
+
+            CreateMap<OrderTopping, OrderToppingDTO>();
+            CreateMap<OrderToppingDTO, OrderTopping>();
         }
     }
 }

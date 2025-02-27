@@ -20,9 +20,15 @@ namespace CoffeeHouseAPI.Services.OrderService
             IQueryable<Order> orders = _context.Orders
                 .Include(x => x.Address)
                 .Include(x => x.Customer)
-                .Include(x => x.OrderDetails)
+                .Include(x => x.OrderDetails).ThenInclude(y => y.ProductSize).ThenInclude(z => z.Product)
+                .Include(x => x.OrderDetails).ThenInclude(y => y.OrderToppings).ThenInclude(z => z.Topping)
                 .Include(x => x.OrderLogs)
                 .Include(x => x.Voucher);
+            if (orders == null)
+            {
+                return new List<Order>();
+            }
+
             if (isNoTracking)
             {
                 orders = orders.AsNoTracking();

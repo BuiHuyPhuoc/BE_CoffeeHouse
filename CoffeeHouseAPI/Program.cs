@@ -1,13 +1,8 @@
 ﻿
 using CoffeeHouseAPI.Extensions;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using OrderService.Helper;
 using System.Text;
-using CoffeeHouseAPI.Services;
 using CoffeeHouseAPI.Extensions.MiddleWares;
 
 namespace CoffeeHouseAPI

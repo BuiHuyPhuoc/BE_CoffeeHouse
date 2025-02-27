@@ -259,10 +259,22 @@ namespace CoffeeHouseAPI.Controllers
         }
 
         [HttpGet]
+        [Route(nameof(GetAllOrder))]
         public IActionResult GetAllOrder()
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+            var orders = _orderService.GetAllOrderWithRelate(true).Where(x => x.CustomerId == loginResponse.Id).ToList();
+
+            var orderDTOs = _mapper.Map<List<OrderResponseDTO>>(orders);
+            return Ok(new APIResponseBase
+            {
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderDTOs,
+                Status = (int)StatusCodes.Status200OK,
+                IsSuccess = true
+            });
         }
+
 
         private async Task CreateOrderStatus(int id, string v)
         {
