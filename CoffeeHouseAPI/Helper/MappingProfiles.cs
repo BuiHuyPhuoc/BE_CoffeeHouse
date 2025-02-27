@@ -97,8 +97,7 @@ namespace CoffeeHouseAPI.Helper
             CreateMap<OrderDetail, OrderDetailDTO>();
             CreateMap<OrderDetailDTO, OrderDetail>();
 
-            CreateMap<Order, OrderResponseDTO>()
-                .ForMember(dest => dest.OrderDetails, opt => opt.MapFrom(src => src.OrderDetails));
+            CreateMap<Order, OrderResponseDTO>();
             CreateMap<OrderResponseDTO, Order>();
 
             CreateMap<OrderLog, OrderLogDTO>();

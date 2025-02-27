@@ -10,7 +10,9 @@ using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
 using CoffeeHouseLib.Models;
 using Google.Apis.Util;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
@@ -259,11 +261,29 @@ namespace CoffeeHouseAPI.Controllers
         }
 
         [HttpGet]
-        [Route(nameof(GetAllOrder))]
-        public IActionResult GetAllOrder()
+        [Route(nameof(GetOrder))]
+        public IActionResult GetOrder()
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
             var orders = _orderService.GetAllOrderWithRelate(true).Where(x => x.CustomerId == loginResponse.Id).ToList();
+
+            var orderDTOs = _mapper.Map<List<OrderResponseDTO>>(orders);
+            return Ok(new APIResponseBase
+            {
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderDTOs,
+                Status = (int)StatusCodes.Status200OK,
+                IsSuccess = true
+            });
+        }
+
+        [HttpGet]
+        [Route(nameof(GetAllOrder))]
+        [MasterAuth(true)]
+        public IActionResult GetAllOrder()
+        {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+            var orders = _orderService.GetAllOrderWithRelate(true);
 
             var orderDTOs = _mapper.Map<List<OrderResponseDTO>>(orders);
             return Ok(new APIResponseBase
