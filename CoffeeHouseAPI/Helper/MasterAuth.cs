@@ -14,12 +14,10 @@ namespace CoffeeHouseAPI.Helper
 {
     public class MasterAuth : Attribute, IAsyncAuthorizationFilter
     {
-        /// <summary>
-        /// contructor
-        /// </summary>
-        public MasterAuth()
+        public bool _admin;
+        public MasterAuth(bool admin = false)
         {
-
+            _admin = admin;
         }
 
         /// <summary>
@@ -44,7 +42,8 @@ namespace CoffeeHouseAPI.Helper
 
             var email = GetMailFromJWTToken(token, isValidateLifetime);
 
-            if (email == null) {
+            if (email == null)
+            {
                 context.Result = new UnauthorizedResult();
                 return;
             }
@@ -60,10 +59,18 @@ namespace CoffeeHouseAPI.Helper
             var customer = _context.Customers.Where(x => x.Id == account.Id).FirstOrDefault()
                 ?? new Customer();
 
-            LoginResponse loginResponse = MappingLoginResponseFromAccountAndCustomer(customer);
+            if (_admin == false || customer.IdRole == _admin)
+            {
+                LoginResponse loginResponse = MappingLoginResponseFromAccountAndCustomer(customer);
 
-            context.HttpContext.Items["LoginResponse"] = loginResponse;
-            return;
+                context.HttpContext.Items["LoginResponse"] = loginResponse;
+                return;
+            }
+            else
+            {
+                context.Result = new UnauthorizedResult();
+                return;
+            }
         }
 
         public static LoginResponse MappingLoginResponseFromAccountAndCustomer(Customer customer)
@@ -99,7 +106,7 @@ namespace CoffeeHouseAPI.Helper
                     ValidIssuer = issuer,
                     ValidateAudience = true,
                     ValidAudience = audience,
-                    ValidateLifetime = validateLifetime, 
+                    ValidateLifetime = validateLifetime,
                     ClockSkew = TimeSpan.Zero
                 };
 

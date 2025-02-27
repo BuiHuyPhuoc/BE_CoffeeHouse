@@ -5,11 +5,14 @@ using CoffeeHouseAPI.DTOs.Order;
 using CoffeeHouseAPI.DTOs.Topping;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.Services.OrderService;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
 using CoffeeHouseLib.Models;
 using Google.Apis.Util;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
@@ -20,24 +23,26 @@ namespace CoffeeHouseAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MasterAuth]
     public class OrderController : TCHControllerBase
     {
         readonly DbcoffeeHouseContext _context;
         readonly IVoucherService _voucherService;
         readonly IProductService _productService;
         readonly IMapper _mapper;
+        private readonly IOrderService _orderService;
 
-        public OrderController(DbcoffeeHouseContext context,IProductService productService, IVoucherService voucherService, IMapper mapper)
+        public OrderController(DbcoffeeHouseContext context,IProductService productService, IVoucherService voucherService, IMapper mapper, IOrderService orderService)
         {
             _mapper = mapper;
             _context = context;
             _voucherService = voucherService;
             _productService = productService;
+            _orderService = orderService;
         }
 
         [HttpPost]
         [Route("CreateOrderFromCart")]
+        [MasterAuth]
         public async Task<IActionResult> CreateOrderFromCart([FromBody] CreateOrderCartDTO request)
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
@@ -178,6 +183,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPost]
         [Route("CreateOrder")]
+        [MasterAuth]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDTO request)
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
@@ -254,6 +260,43 @@ namespace CoffeeHouseAPI.Controllers
                 }
             }
         }
+
+        [HttpGet]
+        [Route(nameof(GetOrder))]
+        [MasterAuth]
+        public IActionResult GetOrder()
+        {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+            var orders = _orderService.GetAllOrderWithRelate(true).Where(x => x.CustomerId == loginResponse.Id).ToList();
+
+            var orderDTOs = _mapper.Map<List<OrderResponseDTO>>(orders);
+            return Ok(new APIResponseBase
+            {
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderDTOs,
+                Status = (int)StatusCodes.Status200OK,
+                IsSuccess = true
+            });
+        }
+
+        [HttpGet]
+        [Route(nameof(GetAllOrder))]
+        [MasterAuth(true)]
+        public IActionResult GetAllOrder()
+        {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+            var orders = _orderService.GetAllOrderWithRelate(true);
+
+            var orderDTOs = _mapper.Map<List<OrderResponseDTO>>(orders);
+            return Ok(new APIResponseBase
+            {
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderDTOs,
+                Status = (int)StatusCodes.Status200OK,
+                IsSuccess = true
+            });
+        }
+
 
         private async Task CreateOrderStatus(int id, string v)
         {
