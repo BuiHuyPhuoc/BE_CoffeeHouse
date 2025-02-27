@@ -17,6 +17,6 @@ namespace CoffeeHouseAPI.DTOs.Order
 
         public ProductSizeResponseDTO ProductSize { get; set; } = null!;
 
-        public OrderToppingDTO 
+        public List<OrderToppingDTO> OrderToppings { get; set; } = new List<OrderToppingDTO>();
     }
 }
