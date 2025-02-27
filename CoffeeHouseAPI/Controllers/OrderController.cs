@@ -23,7 +23,6 @@ namespace CoffeeHouseAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MasterAuth]
     public class OrderController : TCHControllerBase
     {
         readonly DbcoffeeHouseContext _context;
@@ -43,6 +42,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPost]
         [Route("CreateOrderFromCart")]
+        [MasterAuth]
         public async Task<IActionResult> CreateOrderFromCart([FromBody] CreateOrderCartDTO request)
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
@@ -183,6 +183,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPost]
         [Route("CreateOrder")]
+        [MasterAuth]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDTO request)
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
@@ -262,6 +263,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpGet]
         [Route(nameof(GetOrder))]
+        [MasterAuth]
         public IActionResult GetOrder()
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
