@@ -1,5 +1,8 @@
-﻿using CoffeeHouseAPI.Services.Email;
+﻿using CoffeeHouseAPI.DTOs.APIPayload;
+using CoffeeHouseAPI.Services.Email;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Net;
+using System.Text.Json;
 
 namespace CoffeeHouseAPI.Extensions.MiddleWares
 {
@@ -24,6 +27,34 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
         {
             try
             {
+                var modelState = httpContext.Features.Get<ModelStateDictionary>();
+
+                if (modelState != null && !modelState.IsValid)
+                {
+                    var errors = modelState
+                        .Where(ms => ms.Value?.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).FirstOrDefault()
+                        );
+
+                    var responseObj = new APIResponseBase
+                    {
+                        Status = 422,
+                        Message = "Format Error",
+                        IsSuccess = false,
+                        Error = errors
+                    };
+
+                    httpContext.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+                    httpContext.Response.ContentType = "application/json";
+
+                    var jsonResponse = JsonSerializer.Serialize(responseObj);
+                    await httpContext.Response.WriteAsync(jsonResponse);
+
+                    return;
+                }
+
                 await _next(httpContext);
             }
             catch (Exception ex)
@@ -34,7 +65,7 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
                     var recipients = new List<string> { "buihuyphuoc42@gmail.com", "nldangkhoa0712@gmail.com" };
                     var subject = "🚨 System Error Alert";
                     var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
-                    await emailSender.SendEmailAsync(recipients, subject, message, null, null);
+                    emailSender.SendEmailAsync(recipients, subject, message, null, null);
                 }
                 finally
                 {

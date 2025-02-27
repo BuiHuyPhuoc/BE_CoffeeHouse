@@ -1,6 +1,7 @@
-﻿using CoffeeHouseAPI.Enums;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using System;
+﻿using CoffeeHouseAPI.DTOs.APIPayload;
+using CoffeeHouseAPI.Enums;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Text;
 
 namespace CoffeeHouseAPI.Helper
@@ -57,6 +58,22 @@ namespace CoffeeHouseAPI.Helper
             }
 
             return ShuffleString(result.ToString());
+        }
+
+        public static ObjectResult BAD_FORMAT_RESPONSE(ModelStateDictionary modelState)
+        {
+            return new BadRequestObjectResult(new APIResponseBase
+            {
+                Status = 422,
+                Message = "Format Error",
+                IsSuccess = false,
+                Error = modelState
+                    .Where(ms => ms.Value?.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).FirstOrDefault()
+                    )
+            });
         }
 
         private static string ShuffleString(string str)

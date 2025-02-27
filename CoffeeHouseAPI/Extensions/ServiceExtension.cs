@@ -1,9 +1,12 @@
-﻿using CoffeeHouseAPI.Helper;
+﻿using CoffeeHouseAPI.Extensions.MiddleWares;
+using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.AddressService;
 using CoffeeHouseAPI.Services.Email;
 using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using OrderService.Helper;
 
@@ -12,13 +15,18 @@ namespace CoffeeHouseAPI.Extensions
     public static class ServiceExtension
     {
         public static void Register(this IServiceCollection services, IConfiguration configuration)
-        { 
+        {
             // Đăng ký các dịch vụ
             ServiceRegister(services, configuration);
         }
 
         private static void ServiceRegister(IServiceCollection services, IConfiguration configuration)
         {
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
+            });
+
             // CORS 
             services.AddCors(options =>
             {
@@ -30,6 +38,8 @@ namespace CoffeeHouseAPI.Extensions
                 });
             });
 
+            // Register middleware validate
+            services.AddScoped<ValidationFilter>();
 
             // Register Service
             services.AddAutoMapper(typeof(MappingProfiles).Assembly);
