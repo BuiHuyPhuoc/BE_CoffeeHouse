@@ -2,6 +2,7 @@
 using Azure.Core;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Auth;
+using CoffeeHouseAPI.Extensions.MiddleWares;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.Email;
 using CoffeeHouseLib.Models;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
@@ -22,10 +24,12 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using ForgotPasswordRequest = CoffeeHouseAPI.DTOs.Auth.ForgotPasswordRequest;
 
 namespace CoffeeHouseAPI.Controllers
 {
+    [ServiceFilter(typeof(ValidationFilter))]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : TCHControllerBase
@@ -46,6 +50,11 @@ namespace CoffeeHouseAPI.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login([FromBody] LoginResquest request)
         {
+            if (request.Password.Length < 8)
+            {
+                ModelState.AddModelError("Password", "Password length is more than 8");
+            }
+
             var customer = await _context.Customers
                             .Include(x => x.Account)
                             .Where(x => x.Email == request.Email)
@@ -108,7 +117,7 @@ namespace CoffeeHouseAPI.Controllers
                 var oldRfsToken = _context.RefreshTokens.Find(customer.Account.RefreshToken);
                 if (oldRfsToken != null)
                 {
-                     oldRfsToken.Revoke = DateTime.Now;
+                    oldRfsToken.Revoke = DateTime.Now;
                     await this.SaveChanges(_context);
                 }
             }
@@ -177,7 +186,7 @@ namespace CoffeeHouseAPI.Controllers
             var builder = WebApplication.CreateBuilder();
             string frontEndDomain = builder.Configuration["FrontendDomain"] ?? string.Empty;
             string urlVerify = this.GetUrlPort() + verifyEndpoint + newOtp;
-            
+
             Account newAccount = new Account
             {
                 Password = request.Password,
@@ -283,7 +292,7 @@ namespace CoffeeHouseAPI.Controllers
             var builder = WebApplication.CreateBuilder();
             string frontEndDomain = builder.Configuration["FrontendDomain"] ?? string.Empty;
             string urlVerify = this.GetUrlPort() + verifyEndpoint + newOtp;
-            
+
             customer.Account.VerifyToken = newOtp;
             await this.SaveChanges(_context);
 
@@ -530,13 +539,20 @@ namespace CoffeeHouseAPI.Controllers
             }
         }
 
-        private APIResponseBase ReturnAPIResponse(string message, object value, int StatusCode, bool isSuccess = false)
+        private ObjectResult BadRequestFormat(ModelStateDictionary modelState)
         {
-            return new APIResponseBase
+            return BadRequest(new APIResponseBase
             {
-                Message = message,
-                Value = value,
-            };
+                Status = 422,
+                Message = "Format Error",
+                IsSuccess = false,
+                Error = modelState
+                    .Where(ms => ms.Value?.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).FirstOrDefault()
+                    )
+            });
         }
     }
 }

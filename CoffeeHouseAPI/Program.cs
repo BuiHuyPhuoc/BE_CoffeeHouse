@@ -11,7 +11,7 @@ using CoffeeHouseAPI.Services;
 using CoffeeHouseAPI.Extensions.MiddleWares;
 
 namespace CoffeeHouseAPI
-{ 
+{
     public class Program
     {
         public static void Main(string[] args)
@@ -28,7 +28,8 @@ namespace CoffeeHouseAPI
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(o => {
+            }).AddJwtBearer(o =>
+            {
                 o.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
@@ -41,8 +42,13 @@ namespace CoffeeHouseAPI
                 };
             });
 
-            builder.Services.AddControllers();
-            
+            builder.Services.AddControllers(
+                options =>
+                {
+                    options.Filters.Add<ValidationFilter>();
+                }
+            );
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
