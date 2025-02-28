@@ -35,7 +35,7 @@ namespace CoffeeHouseAPI.Controllers
         [HttpPost]
         [Route(nameof(AddReview))]
         [MasterAuth]
-        public IActionResult AddReview([FromBody] ReviewDTO request)
+        public async Task<IActionResult> AddReview([FromBody] ReviewDTO request)
         {
             var product = _productService.GetProductWithRelate().Where(x => x.Id == request.ProductId).FirstOrDefault();
 
@@ -65,6 +65,9 @@ namespace CoffeeHouseAPI.Controllers
             newReview.UpdatedAt = DateTime.Now;
             newReview.CreatedAt = DateTime.Now;
             newReview.CustomerId = loginResponse.Id;
+
+            _context.Reviews.Add(newReview);
+            await this.SaveChanges(_context);
 
             var newReviewDTO = _mapper.Map<ReviewDTO>(newReview);
 
