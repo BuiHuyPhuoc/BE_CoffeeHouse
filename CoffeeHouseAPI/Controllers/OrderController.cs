@@ -24,7 +24,7 @@ namespace CoffeeHouseAPI.Controllers
         readonly IMapper _mapper;
         private readonly IOrderService _orderService;
 
-        public OrderController(DbcoffeeHouseContext context,IProductService productService, IVoucherService voucherService, IMapper mapper, IOrderService orderService)
+        public OrderController(DbcoffeeHouseContext context, IProductService productService, IVoucherService voucherService, IMapper mapper, IOrderService orderService)
         {
             _mapper = mapper;
             _context = context;
@@ -138,7 +138,7 @@ namespace CoffeeHouseAPI.Controllers
                     await CreateOrderDetail(newOrder.Id, createOrderDetailDTOs);
 
                     List<Cart> deleteCart = new List<Cart>();
-                    foreach(var cartOrderId in request.CartIds)
+                    foreach (var cartOrderId in request.CartIds)
                     {
                         var cart = _context.Carts.Where(x => x.Id == cartOrderId).FirstOrDefault();
                         if (cart != null) deleteCart.Add(cart);
@@ -337,7 +337,8 @@ namespace CoffeeHouseAPI.Controllers
 
             var currentStatus = order.OrderLogs.OrderByDescending(x => x.TimeLog).FirstOrDefault();
 
-            if (currentStatus == null) {
+            if (currentStatus == null)
+            {
                 return BadRequest(new APIResponseBase
                 {
                     IsSuccess = false,
@@ -381,17 +382,38 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             List<OrderLog> newOrderLogs = new List<OrderLog>();
-            
-            for (int i = currentStatus!.StatusCodeNavigation.Index + 1; i <= orderLog.Index; i++)
+
+            if (orderLog.StatusCode == ORDER_STATUS.CANCELED.ToString() && currentStatus!.StatusCode == ORDER_STATUS.DELIVERING.ToString())
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đang giao, không thể huỷ.",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (orderLog.Index != 0)
+            {
+                for (int i = currentStatus!.StatusCodeNavigation.Index + 1; i <= orderLog.Index; i++)
+                {
+                    OrderLog newOrderLog = new OrderLog();
+                    newOrderLog.StatusCode = listOrderStatus[i].StatusCode;
+                    newOrderLog.OrderId = orderId;
+                    newOrderLog.TimeLog = DateTime.Now;
+                    newOrderLogs.Add(newOrderLog);
+                }
+
+                _context.OrderLogs.AddRange(newOrderLogs);
+            } else
             {
                 OrderLog newOrderLog = new OrderLog();
-                newOrderLog.StatusCode = listOrderStatus[i].StatusCode;
+                newOrderLog.StatusCode = orderLog.StatusCode;
                 newOrderLog.OrderId = orderId;
                 newOrderLog.TimeLog = DateTime.Now;
                 newOrderLogs.Add(newOrderLog);
             }
 
-            _context.OrderLogs.AddRange(newOrderLogs);
             await this.SaveChanges(_context);
 
             return Ok(new APIResponseBase
