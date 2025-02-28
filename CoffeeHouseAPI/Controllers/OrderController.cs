@@ -272,6 +272,10 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 28/02/2025
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route(nameof(GetAllOrder))]
         [MasterAuth(true)]
@@ -290,6 +294,11 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 28/02/2025
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route(nameof(GetOrderDetail))]
         [MasterAuth(true)]
@@ -318,6 +327,11 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 28/02/2025
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route(nameof(UpdateOrderStatus))]
         [MasterAuth(true)]
