@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Order;
 using CoffeeHouseAPI.DTOs.Topping;
@@ -9,15 +8,9 @@ using CoffeeHouseAPI.Services.OrderService;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
 using CoffeeHouseLib.Models;
-using Google.Apis.Util;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.ML;
 using System.Net;
-using System.Runtime.CompilerServices;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -466,6 +459,7 @@ namespace CoffeeHouseAPI.Controllers
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
             });
         }
+
         private async Task CreateOrderStatus(int id, string v)
         {
             OrderLog orderLog = new OrderLog();
