@@ -324,6 +324,88 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        [HttpPost]
+        [Route(nameof(UpdateOrderStatus))]
+        public async Task<IActionResult> UpdateOrderStatus(int orderId, string statusCode)
+        {
+            var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == orderId).FirstOrDefault();
+
+            if (order == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            var currentStatus = order.OrderLogs.OrderByDescending(x => x.TimeLog).FirstOrDefault();
+
+            if (currentStatus == null) {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không có trạng thái",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (currentStatus != null && currentStatus.StatusCode == statusCode)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đã ở trạng thái này",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (currentStatus != null && currentStatus.StatusCode == ORDER_STATUS.CANCELED.ToString())
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đã bị hủy",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            var orderLog = _context.OrderStatuses.FirstOrDefault(x => x.StatusCode == statusCode);
+
+            var listOrderStatus = _context.OrderStatuses.OrderBy(x => x.Index).AsNoTracking().ToList();
+
+            if (orderLog == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Trạng thái đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            List<OrderLog> newOrderLogs = new List<OrderLog>();
+            
+            for (int i = currentStatus!.StatusCodeNavigation.Index + 1; i <= orderLog.Index; i++)
+            {
+                OrderLog newOrderLog = new OrderLog();
+                newOrderLog.StatusCode = listOrderStatus[i].StatusCode;
+                newOrderLog.OrderId = orderId;
+                newOrderLog.TimeLog = DateTime.Now;
+                newOrderLogs.Add(newOrderLog);
+            }
+
+            _context.OrderLogs.AddRange(newOrderLogs);
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
+            });
+        }
         private async Task CreateOrderStatus(int id, string v)
         {
             OrderLog orderLog = new OrderLog();
