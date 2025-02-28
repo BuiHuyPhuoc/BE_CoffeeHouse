@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CoffeeHouseAPI.Extensions.MiddleWares;
+using CoffeeHouseAPI.HubService;
 
 namespace CoffeeHouseAPI
 {
@@ -65,6 +66,8 @@ namespace CoffeeHouseAPI
             app.UseMiddleware<ExceptionMiddleWare>();
 
             app.MapControllers();
+
+            app.MapHub<OrderHub>("/orderHub");
 
             app.Run();
         }

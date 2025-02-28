@@ -21,6 +21,8 @@ namespace CoffeeHouseAPI.Extensions
 
         private static void ServiceRegister(IServiceCollection services, IConfiguration configuration)
         {
+            services.AddSignalR();
+
             services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.SuppressModelStateInvalidFilter = true;
