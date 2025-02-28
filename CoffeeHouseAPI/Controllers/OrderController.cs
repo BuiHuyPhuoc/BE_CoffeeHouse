@@ -406,6 +406,66 @@ namespace CoffeeHouseAPI.Controllers
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
             });
         }
+
+        [HttpPost]
+        [Route(nameof(CancelOrder))]
+        public async Task<IActionResult> CancelOrder(int orderId)
+        {
+            var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == orderId).FirstOrDefault();
+
+            if (order == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            var currentStatus = order.OrderLogs.OrderByDescending(x => x.TimeLog).FirstOrDefault();
+
+            if (currentStatus == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không có trạng thái",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (currentStatus.StatusCode == ORDER_STATUS.CANCELED.ToString())
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đã bị hủy",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (currentStatus.StatusCode == ORDER_STATUS.DELIVERED.ToString())
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đã được giao",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            await CreateOrderStatus(orderId, ORDER_STATUS.CANCELED.ToString());
+
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
+            });
+        }
         private async Task CreateOrderStatus(int id, string v)
         {
             OrderLog orderLog = new OrderLog();
