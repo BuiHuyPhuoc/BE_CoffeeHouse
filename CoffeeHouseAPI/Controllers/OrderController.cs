@@ -4,11 +4,13 @@ using CoffeeHouseAPI.DTOs.Order;
 using CoffeeHouseAPI.DTOs.Topping;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.HubService;
 using CoffeeHouseAPI.Services.OrderService;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
 using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 
@@ -23,14 +25,16 @@ namespace CoffeeHouseAPI.Controllers
         readonly IProductService _productService;
         readonly IMapper _mapper;
         private readonly IOrderService _orderService;
+        readonly IHubContext<OrderHub> _hubContext;
 
-        public OrderController(DbcoffeeHouseContext context, IProductService productService, IVoucherService voucherService, IMapper mapper, IOrderService orderService)
+        public OrderController(DbcoffeeHouseContext context, IProductService productService, IVoucherService voucherService, IMapper mapper, IOrderService orderService, IHubContext<OrderHub> hubContext)
         {
             _mapper = mapper;
             _context = context;
             _voucherService = voucherService;
             _productService = productService;
             _orderService = orderService;
+            _hubContext = hubContext;
         }
 
         [HttpPost]
@@ -227,8 +231,10 @@ namespace CoffeeHouseAPI.Controllers
                     await CreateOrderStatus(newOrder.Id, ORDER_STATUS.BOOKED.ToString());
 
                     await CreateOrderDetail(newOrder.Id, request.OrderDetails);
-
                     await transaction.CommitAsync();
+
+                    await _hubContext.Clients.All.SendAsync("AddOrder", newOrder);
+
                     return Ok(new APIResponseBase
                     {
                         IsSuccess = true,
