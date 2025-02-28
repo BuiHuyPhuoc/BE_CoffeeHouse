@@ -292,6 +292,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpGet]
         [Route(nameof(GetOrderDetail))]
+        [MasterAuth(true)]
         public IActionResult GetOrderDetail(int orderId)
         {
             var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == orderId).FirstOrDefault();
@@ -319,6 +320,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPost]
         [Route(nameof(UpdateOrderStatus))]
+        [MasterAuth(true)]
         public async Task<IActionResult> UpdateOrderStatus(int orderId, string statusCode)
         {
             var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == orderId).FirstOrDefault();
@@ -402,6 +404,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPost]
         [Route(nameof(CancelOrder))]
+        [MasterAuth(true)]
         public async Task<IActionResult> CancelOrder(int orderId)
         {
             var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == orderId).FirstOrDefault();
