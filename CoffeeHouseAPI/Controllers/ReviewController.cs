@@ -14,7 +14,6 @@ namespace CoffeeHouseAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MasterAuth]
     public class ReviewController : TCHControllerBase
     {
         readonly DbcoffeeHouseContext _context;
@@ -35,6 +34,7 @@ namespace CoffeeHouseAPI.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(nameof(AddReview))]
+        [MasterAuth]
         public IActionResult AddReview([FromBody] ReviewDTO request)
         {
             var product = _productService.GetProductWithRelate().Where(x => x.Id == request.ProductId).FirstOrDefault();

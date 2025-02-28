@@ -25,6 +25,7 @@ namespace CoffeeHouseAPI.Services.ProductService
                 .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
                 .Include(x => x.Toppings)
                 .Include(x => x.Reviews)
+                .Include(x => x.Discount)
                 .Where(x => x.IsValid);
 
             if (isNoTracking)
