@@ -321,9 +321,9 @@ namespace CoffeeHouseAPI.Controllers
         [HttpPost]
         [Route(nameof(UpdateOrderStatus))]
         [MasterAuth(true)]
-        public async Task<IActionResult> UpdateOrderStatus(int orderId, string statusCode)
+        public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateStatusOrderDTO request)
         {
-            var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == orderId).FirstOrDefault();
+            var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == request.OrderId).FirstOrDefault();
 
             if (order == null)
             {
@@ -347,7 +347,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (currentStatus != null && currentStatus.StatusCode == statusCode)
+            if (currentStatus != null && currentStatus.StatusCode == request.StatusCode)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -367,9 +367,9 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            var orderLog = _context.OrderStatuses.FirstOrDefault(x => x.StatusCode == statusCode);
+            var orderLog = _context.OrderStatuses.FirstOrDefault(x => x.StatusCode == request.StatusCode);
 
-            var listOrderStatus = _context.OrderStatuses.OrderBy(x => x.Index).AsNoTracking().ToList();
+            var listOrderStatus = _context.OrderStatuses.Where(x => x.Index > 0).OrderBy(x => x.Index).AsNoTracking().ToList();
 
             if (orderLog == null)
             {
@@ -381,8 +381,6 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            List<OrderLog> newOrderLogs = new List<OrderLog>();
-
             if (orderLog.StatusCode == ORDER_STATUS.CANCELED.ToString() && currentStatus!.StatusCode == ORDER_STATUS.DELIVERING.ToString())
             {
                 return BadRequest(new APIResponseBase
@@ -393,27 +391,28 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
+            List<OrderLog> newOrderLogs = new List<OrderLog>();
+
             if (orderLog.Index != 0)
             {
                 for (int i = currentStatus!.StatusCodeNavigation.Index + 1; i <= orderLog.Index; i++)
                 {
                     OrderLog newOrderLog = new OrderLog();
-                    newOrderLog.StatusCode = listOrderStatus[i].StatusCode;
-                    newOrderLog.OrderId = orderId;
+                    newOrderLog.StatusCode = listOrderStatus[i - 1].StatusCode;
+                    newOrderLog.OrderId = request.OrderId;
                     newOrderLog.TimeLog = DateTime.Now;
                     newOrderLogs.Add(newOrderLog);
                 }
-
-                _context.OrderLogs.AddRange(newOrderLogs);
-            } else
+            }
+            else
             {
                 OrderLog newOrderLog = new OrderLog();
                 newOrderLog.StatusCode = orderLog.StatusCode;
-                newOrderLog.OrderId = orderId;
+                newOrderLog.OrderId = request.OrderId;
                 newOrderLog.TimeLog = DateTime.Now;
                 newOrderLogs.Add(newOrderLog);
             }
-
+            _context.OrderLogs.AddRange(newOrderLogs);
             await this.SaveChanges(_context);
 
             return Ok(new APIResponseBase
