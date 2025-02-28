@@ -297,6 +297,32 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        [HttpGet]
+        [Route(nameof(GetOrderDetail))]
+        public IActionResult GetOrderDetail(int orderId)
+        {
+            var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == orderId).FirstOrDefault();
+
+            if (order == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            var orderDTO = _mapper.Map<OrderResponseDTO>(order);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderDTO
+            });
+        }
 
         private async Task CreateOrderStatus(int id, string v)
         {
