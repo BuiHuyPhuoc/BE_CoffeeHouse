@@ -12,6 +12,7 @@ using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.Net;
 
 namespace CoffeeHouseAPI.Controllers
@@ -231,9 +232,12 @@ namespace CoffeeHouseAPI.Controllers
                     await CreateOrderStatus(newOrder.Id, ORDER_STATUS.BOOKED.ToString());
 
                     await CreateOrderDetail(newOrder.Id, request.OrderDetails);
+
+                    var orderResponse = _mapper.Map<OrderResponseDTO>(newOrder);
+
                     await transaction.CommitAsync();
 
-                    await _hubContext.Clients.All.SendAsync("AddOrder", newOrder);
+                    await _hubContext.Clients.All.SendAsync("OrderUpdated");
 
                     return Ok(new APIResponseBase
                     {

@@ -1,5 +1,6 @@
 ﻿using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
 namespace CoffeeHouseAPI.HubService
 {
 
@@ -7,7 +8,14 @@ namespace CoffeeHouseAPI.HubService
     {
         public async Task SendNewOrder(Order order)
         {
-            await Clients.All.SendAsync("AddOrder", order);
+            Console.WriteLine($"Đang gửi đơn hàng: {order.Id}"); 
+            await Clients.All.SendAsync("AddOrder", JsonConvert.SerializeObject(order));
+        }
+
+        public async Task NotifyNewOrder()
+        {
+            Console.WriteLine("Đơn hàng mới đã được tạo!");
+            await Clients.All.SendAsync("OrderUpdated");
         }
     }
 }
