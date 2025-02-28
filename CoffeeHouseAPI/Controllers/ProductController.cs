@@ -1,16 +1,11 @@
 ﻿using AutoMapper;
-using Azure.Core;
-using CoffeeHouseAPI.DTOs.AI;
 using CoffeeHouseAPI.DTOs.APIPayload;
-using CoffeeHouseAPI.DTOs.Category;
-using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseAPI.DTOs.Product;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseLib.Models;
-using Google.Apis.Upload;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
@@ -272,7 +267,9 @@ namespace CoffeeHouseAPI.Controllers
             List<Product> result = new List<Product>();
             foreach (var item in similarities)
             {
-                result.Add(item.Product);
+                var pro = products.Where(x => x.Id == item.Product.Id).FirstOrDefault();
+                if (pro == null) continue;
+                result.Add(pro);
             }
 
             var resultDTO = _mapper.Map<List<ProductResponseDTO>>(result);
@@ -287,7 +284,7 @@ namespace CoffeeHouseAPI.Controllers
         }
 
         /// <summary>
-        /// Last test: 24/2/2025
+        /// Last test: 28/2/2025
         /// </summary>
         /// <param name="id"></param>
         /// <param name="request"></param>

@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Order;
 using CoffeeHouseAPI.DTOs.Topping;
@@ -9,15 +8,9 @@ using CoffeeHouseAPI.Services.OrderService;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
 using CoffeeHouseLib.Models;
-using Google.Apis.Util;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.ML;
 using System.Net;
-using System.Runtime.CompilerServices;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -31,7 +24,7 @@ namespace CoffeeHouseAPI.Controllers
         readonly IMapper _mapper;
         private readonly IOrderService _orderService;
 
-        public OrderController(DbcoffeeHouseContext context,IProductService productService, IVoucherService voucherService, IMapper mapper, IOrderService orderService)
+        public OrderController(DbcoffeeHouseContext context, IProductService productService, IVoucherService voucherService, IMapper mapper, IOrderService orderService)
         {
             _mapper = mapper;
             _context = context;
@@ -145,7 +138,7 @@ namespace CoffeeHouseAPI.Controllers
                     await CreateOrderDetail(newOrder.Id, createOrderDetailDTOs);
 
                     List<Cart> deleteCart = new List<Cart>();
-                    foreach(var cartOrderId in request.CartIds)
+                    foreach (var cartOrderId in request.CartIds)
                     {
                         var cart = _context.Carts.Where(x => x.Id == cartOrderId).FirstOrDefault();
                         if (cart != null) deleteCart.Add(cart);
@@ -279,6 +272,10 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 28/02/2025
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route(nameof(GetAllOrder))]
         [MasterAuth(true)]
@@ -297,6 +294,209 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Last test: 28/02/2025
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route(nameof(GetOrderDetail))]
+        [MasterAuth(true)]
+        public IActionResult GetOrderDetail(int orderId)
+        {
+            var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == orderId).FirstOrDefault();
+
+            if (order == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            var orderDTO = _mapper.Map<OrderResponseDTO>(order);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderDTO
+            });
+        }
+
+        /// <summary>
+        /// Last test: 28/02/2025
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(nameof(UpdateOrderStatus))]
+        [MasterAuth(true)]
+        public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateStatusOrderDTO request)
+        {
+            var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == request.OrderId).FirstOrDefault();
+
+            if (order == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            var currentStatus = order.OrderLogs.OrderByDescending(x => x.TimeLog).FirstOrDefault();
+
+            if (currentStatus == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không có trạng thái",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (currentStatus != null && currentStatus.StatusCode == request.StatusCode)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đã ở trạng thái này",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (currentStatus != null && currentStatus.StatusCode == ORDER_STATUS.CANCELED.ToString())
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đã bị hủy",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            var orderLog = _context.OrderStatuses.FirstOrDefault(x => x.StatusCode == request.StatusCode);
+
+            var listOrderStatus = _context.OrderStatuses.Where(x => x.Index > 0).OrderBy(x => x.Index).AsNoTracking().ToList();
+
+            if (orderLog == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Trạng thái đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (orderLog.StatusCode == ORDER_STATUS.CANCELED.ToString() && currentStatus!.StatusCode == ORDER_STATUS.DELIVERING.ToString())
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đang giao, không thể huỷ.",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            List<OrderLog> newOrderLogs = new List<OrderLog>();
+
+            if (orderLog.Index != 0)
+            {
+                for (int i = currentStatus!.StatusCodeNavigation.Index + 1; i <= orderLog.Index; i++)
+                {
+                    OrderLog newOrderLog = new OrderLog();
+                    newOrderLog.StatusCode = listOrderStatus[i - 1].StatusCode;
+                    newOrderLog.OrderId = request.OrderId;
+                    newOrderLog.TimeLog = DateTime.Now;
+                    newOrderLogs.Add(newOrderLog);
+                }
+            }
+            else
+            {
+                OrderLog newOrderLog = new OrderLog();
+                newOrderLog.StatusCode = orderLog.StatusCode;
+                newOrderLog.OrderId = request.OrderId;
+                newOrderLog.TimeLog = DateTime.Now;
+                newOrderLogs.Add(newOrderLog);
+            }
+            _context.OrderLogs.AddRange(newOrderLogs);
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
+            });
+        }
+
+        [HttpPost]
+        [Route(nameof(CancelOrder))]
+        [MasterAuth(true)]
+        public async Task<IActionResult> CancelOrder(int orderId)
+        {
+            var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.Id == orderId).FirstOrDefault();
+
+            if (order == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            var currentStatus = order.OrderLogs.OrderByDescending(x => x.TimeLog).FirstOrDefault();
+
+            if (currentStatus == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không có trạng thái",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (currentStatus.StatusCode == ORDER_STATUS.CANCELED.ToString())
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đã bị hủy",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (currentStatus.StatusCode == ORDER_STATUS.DELIVERED.ToString())
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đã được giao",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            await CreateOrderStatus(orderId, ORDER_STATUS.CANCELED.ToString());
+
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
+            });
+        }
 
         private async Task CreateOrderStatus(int id, string v)
         {

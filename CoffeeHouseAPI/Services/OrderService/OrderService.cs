@@ -22,7 +22,7 @@ namespace CoffeeHouseAPI.Services.OrderService
                 .Include(x => x.Customer)
                 .Include(x => x.OrderDetails).ThenInclude(y => y.ProductSize).ThenInclude(z => z.Product)
                 .Include(x => x.OrderDetails).ThenInclude(y => y.OrderToppings).ThenInclude(z => z.Topping)
-                .Include(x => x.OrderLogs)
+                .Include(x => x.OrderLogs.OrderBy(y => y.TimeLog)).ThenInclude(y => y.StatusCodeNavigation)
                 .Include(x => x.Voucher);
             if (orders == null)
             {

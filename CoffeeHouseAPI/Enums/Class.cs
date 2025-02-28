@@ -10,10 +10,10 @@
 
     public enum ORDER_STATUS
     {
-        BOOKED,
         CANCELED,
-        DELIVERED,
+        BOOKED,
+        INPROCESSING,
         DELIVERING,
-        INPROCESSING
+        DELIVERED,
     }
 }
