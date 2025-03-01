@@ -148,17 +148,20 @@ namespace CoffeeHouseAPI.Controllers
         public IActionResult GetProductHomePage()
         {
             ProductHomePageDTO productHomePageDTO = new ProductHomePageDTO();
-            var newestProducts = _productService.GetProductWithRelate()
+            var newestProducts = _productService.GetProductWithRelate(true)
                 .OrderByDescending(x => x.CreatedAt)
                 .Take(5)
                 .ToList();
-            productHomePageDTO.Newests = _mapper.Map<List<ProductResponseDTO>>(newestProducts);
 
-            var saleProducts = _productService.GetProductWithRelate()
+            var saleProducts = _productService.GetProductWithRelate(true)
                 .Where(x => x.Discount != null)
                 .ToList();
 
+            var top5SaleProduct = _productService.GetTopSaleProductWithRelate(true);
+
+            productHomePageDTO.Trendings = _mapper.Map<List<ProductResponseDTO>>(top5SaleProduct);
             productHomePageDTO.Sales = _mapper.Map<List<ProductResponseDTO>>(saleProducts);
+            productHomePageDTO.Newests = _mapper.Map<List<ProductResponseDTO>>(newestProducts);
 
             return Ok(new APIResponseBase
             {

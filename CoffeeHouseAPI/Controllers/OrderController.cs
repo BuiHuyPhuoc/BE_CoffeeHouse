@@ -154,6 +154,8 @@ namespace CoffeeHouseAPI.Controllers
 
                     await transaction.CommitAsync();
 
+                    await _hubContext.Clients.All.SendAsync("OrderUpdated");
+
                     return Ok(new APIResponseBase
                     {
                         IsSuccess = true,
@@ -233,8 +235,6 @@ namespace CoffeeHouseAPI.Controllers
 
                     await CreateOrderDetail(newOrder.Id, request.OrderDetails);
 
-                    var orderResponse = _mapper.Map<OrderResponseDTO>(newOrder);
-
                     await transaction.CommitAsync();
 
                     await _hubContext.Clients.All.SendAsync("OrderUpdated");
@@ -270,7 +270,10 @@ namespace CoffeeHouseAPI.Controllers
         public IActionResult GetOrder()
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
-            var orders = _orderService.GetAllOrderWithRelate(true).Where(x => x.CustomerId == loginResponse.Id).ToList();
+            var orders = _orderService.GetAllOrderWithRelate(true)
+                        .Where(x => x.CustomerId == loginResponse.Id)
+                        .OrderByDescending(x => x.OrderDate)
+                        .ToList();
 
             var orderDTOs = _mapper.Map<List<OrderResponseDTO>>(orders);
             return Ok(new APIResponseBase
@@ -508,10 +511,26 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route(nameof(GetAllOrderStatus))]
         [MasterAuth(true)]
         public IActionResult GetAllOrderStatus()
+        {
+            var orderStatuses = _context.OrderStatuses.ToList();
+            var orderStatusDTOs = _mapper.Map<List<OrderStatusDTO>>(orderStatuses);
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderStatusDTOs
+            });
+        }
+
+        [HttpGet]
+        [Route(nameof(GetOrderStatus))]
+        [MasterAuth]
+        public IActionResult GetOrderStatus()
         {
             var orderStatuses = _context.OrderStatuses.Where(x => x.Index > 0).ToList();
             var orderStatusDTOs = _mapper.Map<List<OrderStatusDTO>>(orderStatuses);
