@@ -516,6 +516,22 @@ namespace CoffeeHouseAPI.Controllers
         [MasterAuth(true)]
         public IActionResult GetAllOrderStatus()
         {
+            var orderStatuses = _context.OrderStatuses.ToList();
+            var orderStatusDTOs = _mapper.Map<List<OrderStatusDTO>>(orderStatuses);
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderStatusDTOs
+            });
+        }
+
+        [HttpGet]
+        [Route(nameof(GetOrderStatus))]
+        [MasterAuth]
+        public IActionResult GetOrderStatus()
+        {
             var orderStatuses = _context.OrderStatuses.Where(x => x.Index > 0).ToList();
             var orderStatusDTOs = _mapper.Map<List<OrderStatusDTO>>(orderStatuses);
             return Ok(new APIResponseBase
