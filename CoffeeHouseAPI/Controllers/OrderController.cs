@@ -154,6 +154,8 @@ namespace CoffeeHouseAPI.Controllers
 
                     await transaction.CommitAsync();
 
+                    await _hubContext.Clients.All.SendAsync("OrderUpdated");
+
                     return Ok(new APIResponseBase
                     {
                         IsSuccess = true,
@@ -232,8 +234,6 @@ namespace CoffeeHouseAPI.Controllers
                     await CreateOrderStatus(newOrder.Id, ORDER_STATUS.BOOKED.ToString());
 
                     await CreateOrderDetail(newOrder.Id, request.OrderDetails);
-
-                    var orderResponse = _mapper.Map<OrderResponseDTO>(newOrder);
 
                     await transaction.CommitAsync();
 
