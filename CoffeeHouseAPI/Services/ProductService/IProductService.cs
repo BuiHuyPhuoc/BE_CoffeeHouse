@@ -5,5 +5,7 @@ namespace CoffeeHouseAPI.Services.ProductService
     public interface IProductService
     {
         List<Product> GetProductWithRelate(bool isNoTracking = false);
+
+        List<Product> GetTopSaleProductWithRelate(bool isNoTracking = false);
     }
 }
