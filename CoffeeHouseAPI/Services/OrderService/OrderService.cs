@@ -20,7 +20,9 @@ namespace CoffeeHouseAPI.Services.OrderService
             IQueryable<Order> orders = _context.Orders
                 .Include(x => x.Address)
                 .Include(x => x.Customer)
-                .Include(x => x.OrderDetails).ThenInclude(y => y.ProductSize).ThenInclude(z => z.Product)
+                .Include(x => x.OrderDetails).ThenInclude(y => y.ProductSize).ThenInclude(z => z.Product).ThenInclude(t => t.ImageDefaultNavigation)
+                .Include(x => x.OrderDetails).ThenInclude(y => y.ProductSize).ThenInclude(z => z.Product).ThenInclude(t => t.Category)
+                .Include(x => x.OrderDetails).ThenInclude(y => y.ProductSize).ThenInclude(z => z.Product).ThenInclude(t => t.Discount)
                 .Include(x => x.OrderDetails).ThenInclude(y => y.OrderToppings).ThenInclude(z => z.Topping)
                 .Include(x => x.OrderLogs.OrderBy(y => y.TimeLog)).ThenInclude(y => y.StatusCodeNavigation)
                 .Include(x => x.Voucher);

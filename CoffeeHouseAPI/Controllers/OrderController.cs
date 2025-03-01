@@ -4,7 +4,7 @@ using CoffeeHouseAPI.DTOs.Order;
 using CoffeeHouseAPI.DTOs.Topping;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
-using CoffeeHouseAPI.HubService;
+using CoffeeHouseAPI.Services.HubService;
 using CoffeeHouseAPI.Services.OrderService;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;

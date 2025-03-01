@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CoffeeHouseAPI.Extensions.MiddleWares;
-using CoffeeHouseAPI.HubService;
+using CoffeeHouseAPI.Services.HubService;
 
 namespace CoffeeHouseAPI
 {
