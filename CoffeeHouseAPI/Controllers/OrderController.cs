@@ -270,7 +270,10 @@ namespace CoffeeHouseAPI.Controllers
         public IActionResult GetOrder()
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
-            var orders = _orderService.GetAllOrderWithRelate(true).Where(x => x.CustomerId == loginResponse.Id).ToList();
+            var orders = _orderService.GetAllOrderWithRelate(true)
+                        .Where(x => x.CustomerId == loginResponse.Id)
+                        .OrderByDescending(x => x.OrderDate)
+                        .ToList();
 
             var orderDTOs = _mapper.Map<List<OrderResponseDTO>>(orders);
             return Ok(new APIResponseBase
