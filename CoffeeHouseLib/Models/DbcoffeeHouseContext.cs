@@ -299,6 +299,10 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("OrderLog");
 
+            entity.HasIndex(e => e.StatusCode, "IX_ORDERLOG_STATUSCODE");
+
+            entity.HasIndex(e => e.TimeLog, "IX_ORDERLOG_TIMELOG");
+
             entity.Property(e => e.StatusCode).HasMaxLength(20);
             entity.Property(e => e.TimeLog).HasColumnType("datetime");
 
@@ -452,8 +456,6 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Review__3214EC07079FDA38");
 
             entity.ToTable("Review");
-
-            entity.HasIndex(e => new { e.CustomerId, e.ProductId }, "UQ__Review__6FEEA8B5A87B42F7").IsUnique();
 
             entity.Property(e => e.Comment).HasMaxLength(255);
             entity.Property(e => e.CreatedAt)
