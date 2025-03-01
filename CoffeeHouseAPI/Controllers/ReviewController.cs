@@ -81,7 +81,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpGet]
         [Route(nameof(GetReview))]
-        public IActionResult GetReview(int id)
+        public IActionResult GetReview(int id, int quantity = 5)
         {
             var product = _productService.GetProductWithRelate().Where(x => x.Id == id).FirstOrDefault();
 
@@ -95,7 +95,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            var review = _context.Reviews.Where(x => x.ProductId == id).ToList();
+            var review = _context.Reviews.Where(x => x.ProductId == id).Take(quantity).ToList();
             var reviewDTO = _mapper.Map<List<ReviewDTO>>(review);
 
             return Ok(new APIResponseBase
