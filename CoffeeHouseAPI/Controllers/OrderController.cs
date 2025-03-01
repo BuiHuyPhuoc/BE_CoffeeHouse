@@ -508,7 +508,7 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route(nameof(GetAllOrderStatus))]
         [MasterAuth(true)]
         public IActionResult GetAllOrderStatus()
