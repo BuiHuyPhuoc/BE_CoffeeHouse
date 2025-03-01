@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 
-namespace CoffeeHouseAPI.HubService
+namespace CoffeeHouseAPI.Services.HubService
 {
     public class ChatHub : Hub
     {

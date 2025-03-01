@@ -60,6 +60,11 @@ namespace CoffeeHouseAPI.Helper
             CreateMap<ProductSize, ProductSizeResponseDTO>();
             CreateMap<ProductSizeResponseDTO, ProductSize>();
 
+            CreateMap<ProductResponseForOrderDetailDTO, Product>();
+            CreateMap<Product, ProductResponseForOrderDetailDTO>();
+
+            CreateMap<ProductSizeResponseForOrderDetailDTO, ProductSize>();
+            CreateMap<ProductSize, ProductSizeResponseForOrderDetailDTO>();
 
             // Create mapping profile for ADDRESS
             CreateMap<AddressDTO, Address>();
