@@ -103,12 +103,17 @@ namespace CoffeeHouseAPI.Controllers
                         .ToList();
             var reviewDTO = _mapper.Map<List<ReviewDTO>>(review);
 
+            bool isMax = (reviewDTO.Count <= quantity);
+
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
                 Status = (int)StatusCodes.Status200OK,
-                Value = reviewDTO
+                Value = new {
+                    Review = reviewDTO,
+                    IsMax = isMax
+                }
             });
         }
     }
