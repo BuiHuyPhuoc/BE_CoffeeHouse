@@ -62,7 +62,7 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
                 try
                 {
                     var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
-                    var recipients = new List<string> { "buihuyphuoc42@gmail.com", "nldangkhoa0712@gmail.com" };
+                    var recipients = new List<string> { "buihuyphuoc42@gmail.com", "nldangkhoa0712@gmail.com", "nguyenngocminhkhoa.dev@gmail.com" };
                     var subject = "🚨 System Error Alert";
                     var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
                     emailSender.SendEmailAsync(recipients, subject, message, null, null);
