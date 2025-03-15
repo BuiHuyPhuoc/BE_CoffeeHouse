@@ -19,6 +19,7 @@ using System.Net;
 using Google.Apis.Storage.v1.Data;
 using System.IO;
 using System.Linq;
+using CoffeeHouseAPI.Services.Firebase;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -28,17 +29,27 @@ namespace CoffeeHouseAPI.Controllers
     {
         readonly DbcoffeeHouseContext _context;
         readonly IMapper _maper;
+        readonly FirebaseService _firebaseService;
 
-        public TestController(IMapper maper, DbcoffeeHouseContext context)
+        public TestController(IMapper maper, DbcoffeeHouseContext context, FirebaseService firebaseService)
         {
             _context = context;
             _maper = maper;
+            _firebaseService = firebaseService;
         }
 
         [HttpGet]
         [Route("Test")]
-        public IActionResult Test()
+        public async Task<IActionResult> Test()
         {
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("TestNotify")]
+        public async Task<IActionResult> TestNotify(string token)
+        {
+            await _firebaseService.SendNotificationAsync(token, "title", "testttt");
             return Ok();
         }
 
