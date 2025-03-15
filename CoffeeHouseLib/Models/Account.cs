@@ -25,6 +25,8 @@ public partial class Account
 
     public DateTime? BlockExpire { get; set; }
 
+    public string? MessageToken { get; set; }
+
     public virtual Customer IdNavigation { get; set; } = null!;
 
     public virtual RefreshToken? RefreshTokenNavigation { get; set; }

@@ -65,7 +65,7 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
                     var recipients = new List<string> { "buihuyphuoc42@gmail.com", "nldangkhoa0712@gmail.com", "nguyenngocminhkhoa.dev@gmail.com" };
                     var subject = "🚨 System Error Alert";
                     var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
-                    emailSender.SendEmailAsync(recipients, subject, message, null, null);
+                    _ = emailSender.SendEmailAsync(recipients, subject, message, null, null);
                 }
                 finally
                 {

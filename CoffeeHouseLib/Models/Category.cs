@@ -11,6 +11,8 @@ public partial class Category
 
     public int? IdParent { get; set; }
 
+    public string? Image { get; set; }
+
     public virtual Category? IdParentNavigation { get; set; }
 
     public virtual ICollection<Category> InverseIdParentNavigation { get; set; } = new List<Category>();

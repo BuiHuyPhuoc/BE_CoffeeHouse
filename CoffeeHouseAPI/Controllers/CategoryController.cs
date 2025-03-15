@@ -84,7 +84,21 @@ namespace CoffeeHouseAPI.Controllers
             return Ok(new APIResponseBase
             {
                 Status = (int)StatusCodes.Status200OK,
-                Value = category,
+                Value = _mapper.Map<CategoryResponseDTO>(category),
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
+                IsSuccess = true
+            });
+        }
+
+        [HttpGet]
+        [Route(nameof(GetParentCategory))]
+        public IActionResult GetParentCategory()
+        {
+            var category = _context.Categories.Where(x => x.IdParent == null).ToList();
+            return Ok(new APIResponseBase
+            {
+                Status = (int)StatusCodes.Status200OK,
+                Value = _mapper.Map<List<CategoryResponseDTO>>(category),
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
                 IsSuccess = true
             });

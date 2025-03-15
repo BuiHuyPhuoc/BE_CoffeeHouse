@@ -1,24 +1,24 @@
-﻿using Azure.Core;
-using CoffeeHouseAPI.DTOs.Address;
-using CoffeeHouseAPI.DTOs.Image;
-using CoffeeHouseLib.Models;
-using Firebase.Database;
+﻿using CoffeeHouseAPI.DTOs.Image;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using System.Text.Json;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace CoffeeHouseAPI.Services.Firebase
 {
     public class FirebaseService
     {
         private readonly StorageClient _storageClient;
-        private string _imageBucket = "shopoes-2e0b8.appspot.com";
-        private string _imageFolder = "coffee_house";
+        private readonly HttpClient _httpClient;
+        private readonly string _imageBucket = "shopoes-2e0b8.appspot.com";
+        private readonly string _imageFolder = "coffee_house";
+        private readonly string _firebaseServerKey;
 
-        public FirebaseService(IConfiguration configuration)
+        public FirebaseService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
-            var firebaseConfig = configuration.GetSection("FirebaseConfig").Get<FirebaseConfig>() ?? throw new Exception();
+            var firebaseConfig = configuration.GetSection("FirebaseConfig").Get<FirebaseConfig>() ?? throw new Exception("Missing Firebase configuration");
+            _firebaseServerKey = firebaseConfig.AuthSecret;
+            _httpClient = httpClientFactory.CreateClient();
 
             var jsonCredentials = new
             {
@@ -34,10 +34,8 @@ namespace CoffeeHouseAPI.Services.Firebase
                 client_x509_cert_url = firebaseConfig.ClientX509CertUrl
             };
 
-
-            var jsonString = System.Text.Json.JsonSerializer.Serialize(jsonCredentials);
+            var jsonString = JsonConvert.SerializeObject(jsonCredentials);
             var credential = GoogleCredential.FromJson(jsonString);
-
             _storageClient = StorageClient.Create(credential);
         }
 
@@ -45,7 +43,6 @@ namespace CoffeeHouseAPI.Services.Firebase
         {
             byte[] imageBytes = Convert.FromBase64String(request.Content);
             string fileTypeLower = request.ImageType.ToLower();
-
             string fileName = $"{_imageFolder}/{Guid.NewGuid()}.{fileTypeLower}";
 
             using (MemoryStream stream = new MemoryStream(imageBytes))
@@ -53,12 +50,30 @@ namespace CoffeeHouseAPI.Services.Firebase
                 await _storageClient.UploadObjectAsync(_imageBucket, fileName, $"image/{fileTypeLower}", stream);
             }
 
-            string downloadUrl = $"https://firebasestorage.googleapis.com/v0/b/{_imageBucket}/o/{Uri.EscapeDataString(fileName)}?alt=media";
-            return downloadUrl;
+            return $"https://firebasestorage.googleapis.com/v0/b/{_imageBucket}/o/{Uri.EscapeDataString(fileName)}?alt=media";
+        }
+
+        public async Task<bool> SendNotificationAsync(string deviceToken, string title, string body)
+        {
+            var message = new
+            {
+                to = deviceToken,
+                notification = new { title, body, sound = "default" },
+                data = new { click_action = "FLUTTER_NOTIFICATION_CLICK" }
+            };
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://fcm.googleapis.com/fcm/send")
+            {
+                Headers = { { "Authorization", _firebaseServerKey } },
+                Content = new StringContent(JsonConvert.SerializeObject(message), Encoding.UTF8, "application/json")
+            };
+
+            var response = await _httpClient.SendAsync(request);
+            return response.IsSuccessStatusCode;
         }
     }
 
-    public class FirebaseConfig 
+    public class FirebaseConfig
     {
         public string Type { get; set; } = string.Empty;
         public string ProjectId { get; set; } = string.Empty;
@@ -70,7 +85,7 @@ namespace CoffeeHouseAPI.Services.Firebase
         public string TokenUri { get; set; } = string.Empty;
         public string AuthProviderX509CertUrl { get; set; } = string.Empty;
         public string ClientX509CertUrl { get; set; } = string.Empty;
-        public string DatabaseUrl {  get; set; } = string.Empty;
-        public string AuthSecret {  get; set; } = string.Empty;
+        public string DatabaseUrl { get; set; } = string.Empty;
+        public string AuthSecret { get; set; } = string.Empty;
     }
 }

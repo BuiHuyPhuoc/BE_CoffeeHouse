@@ -74,6 +74,7 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AccessToken).HasMaxLength(255);
             entity.Property(e => e.BlockExpire).HasColumnType("datetime");
+            entity.Property(e => e.MessageToken).HasMaxLength(255);
             entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.RefreshToken).HasMaxLength(255);
             entity.Property(e => e.ResetPasswordExpired).HasColumnType("datetime");
@@ -422,6 +423,8 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.ToTable("ProductSize");
 
             entity.HasIndex(e => e.Id, "IX_ProductSize_Id");
+
+            entity.HasIndex(e => new { e.Id, e.ProductId }, "IX_ProductSize_Id_ProductId");
 
             entity.HasIndex(e => e.ProductId, "IX_ProductSize_ProductId");
 

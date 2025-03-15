@@ -6,8 +6,11 @@ using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseAPI.Services.OrderService;
 using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseAPI.Services.VoucherService;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace CoffeeHouseAPI.Extensions
 {
@@ -54,6 +57,8 @@ namespace CoffeeHouseAPI.Extensions
                 options.UseSqlServer(connectionString);
             });
 
+            services.AddHttpClient();
+
             // Register for Firebase Service
             services.AddSingleton<FirebaseService>();
 
@@ -63,6 +68,38 @@ namespace CoffeeHouseAPI.Extensions
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IAddressService, AddressService>();
             services.AddScoped<IOrderService, OrderService>();
+
+            var jwtKey = configuration["Jwt:Key"] ?? throw new ArgumentNullException("JWT Key cannot be null.");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(o =>
+            {
+                o.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    IssuerSigningKey = key,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true
+                };
+            });
+
+            services.AddControllers(
+                options =>
+                {
+                    options.Filters.Add<ValidationFilter>();
+                }
+            );
+
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen();
+            services.AddHttpClient();
         }
     }
 }

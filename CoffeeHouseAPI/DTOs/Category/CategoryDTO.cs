@@ -14,5 +14,6 @@
     public class CategoryResponseDTO : CategoryDTO
     {
         public List<CategoryResponseDTO>? ChildCategory { get; set; }
+        public string? Image { get; set; }
     }
 }
