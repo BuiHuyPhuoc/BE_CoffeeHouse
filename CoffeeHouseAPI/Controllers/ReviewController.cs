@@ -7,6 +7,7 @@ using CoffeeHouseAPI.Services.ProductService;
 using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
@@ -98,10 +99,13 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             var review = _context.Reviews.Where(x => x.ProductId == id)
-                        .OrderByDescending(x => x.CreatedAt)
+                        .Include(x => x.Customer).ThenInclude(x => x.AvatarImageNavigation)
+                        .OrderByDescending(x => x.UpdatedAt)
                         .Take(quantity)
+                        .AsNoTracking()
                         .ToList();
-            var reviewDTO = _mapper.Map<List<ReviewDTO>>(review);
+
+            var reviewDTO = _mapper.Map<List<ReviewResponseDTO>>(review);
 
             bool isMax = (reviewDTO.Count <= quantity);
 
@@ -110,7 +114,8 @@ namespace CoffeeHouseAPI.Controllers
                 IsSuccess = true,
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
                 Status = (int)StatusCodes.Status200OK,
-                Value = new {
+                Value = new
+                {
                     Review = reviewDTO,
                     IsMax = isMax
                 }

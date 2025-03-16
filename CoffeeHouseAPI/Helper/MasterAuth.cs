@@ -83,6 +83,7 @@ namespace CoffeeHouseAPI.Helper
                 Phone = customer.Phone,
                 IdRole = customer.IdRole,
                 Email = customer.Email,
+                AvatarImage = customer.AvatarImageNavigation?.FirebaseImage ?? "https://firebasestorage.googleapis.com/v0/b/shopoes-2e0b8.appspot.com/o/coffee_house%2Fdefault_avatar.png?alt=media&token=d1d661aa-7772-4bda-86ea-3a3b66ca513b"
             };
             return loginResponse;
         }

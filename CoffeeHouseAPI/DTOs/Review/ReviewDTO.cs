@@ -1,4 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
+using CoffeeHouseAPI.DTOs.APIPayload;
+using Microsoft.AspNetCore.Identity.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace CoffeeHouseAPI.DTOs.Review
 {
@@ -12,5 +15,12 @@ namespace CoffeeHouseAPI.DTOs.Review
 
         [Required]
         public string Comment { get; set; } = null!;
+
+    }
+
+    public class ReviewResponseDTO : ReviewDTO
+    {
+        public LoginResponse Customer { get; set; } = null!;
+        public DateTime UpdatedAt { get; set; }
     }
 }
