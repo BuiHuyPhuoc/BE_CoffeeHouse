@@ -11,5 +11,6 @@ namespace CoffeeHouseAPI.DTOs.Customer
         public bool Role {  get; set; }
         public int Id { get; set; }
         public int? OrderedCount { get; set; }
+        public string AvatarImage { get; set; } = null!;
     }
 }

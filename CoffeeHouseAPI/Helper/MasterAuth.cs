@@ -56,14 +56,14 @@ namespace CoffeeHouseAPI.Helper
                 return;
             }
 
-            var customer = _context.Customers.Where(x => x.Id == account.Id).FirstOrDefault()
-                ?? new Customer();
+            var customer = _context.Customers.Where(x => x.Id == account.Id && x.IsValid).FirstOrDefault();
 
-            if (_admin == false || customer.IdRole == _admin)
+            if (customer != null && (_admin == false || customer.IdRole == _admin))
             {
                 LoginResponse loginResponse = MappingLoginResponseFromAccountAndCustomer(customer);
 
                 context.HttpContext.Items["LoginResponse"] = loginResponse;
+
                 return;
             }
             else
