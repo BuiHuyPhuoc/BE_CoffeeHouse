@@ -197,6 +197,11 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.Property(e => e.FullName).HasMaxLength(255);
             entity.Property(e => e.IsValid).HasDefaultValue(true);
             entity.Property(e => e.Phone).HasMaxLength(12);
+
+            entity.HasOne(d => d.AvatarImageNavigation).WithMany(p => p.Customers)
+                .HasForeignKey(d => d.AvatarImage)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK__Customer__Avatar__607251E5");
         });
 
         modelBuilder.Entity<Discount>(entity =>
