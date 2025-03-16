@@ -57,7 +57,8 @@ namespace CoffeeHouseAPI.Controllers
 
             var customer = await _context.Customers
                             .Include(x => x.Account)
-                            .Where(x => x.Email == request.Email)
+                            .Include(x => x.AvatarImageNavigation)
+                            .Where(x => x.Email == request.Email && x.IsValid == true)
                             .FirstOrDefaultAsync();
 
             if (customer == null || customer.Account == null)
@@ -169,6 +170,8 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
+            var defaultAvatar = _context.Images.Where(x => x.ImageName == "default_avatar").FirstOrDefault();
+
             Customer newCustomer = new Customer
             {
                 Email = request.Email,
@@ -176,6 +179,7 @@ namespace CoffeeHouseAPI.Controllers
                 Phone = request.Phone,
                 DateOfBirth = request.DateOfBirth,
                 IdRole = request.IdRole,
+                AvatarImage = defaultAvatar?.Id ?? null,
             };
 
             await _context.Customers.AddAsync(newCustomer);
@@ -204,7 +208,7 @@ namespace CoffeeHouseAPI.Controllers
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
-                Message = "Register account success. Please check your email to get OTP.",
+                Message = "Check your email or spam email to get verify link.",
                 Status = (int)StatusCodes.Status200OK,
             });
         }

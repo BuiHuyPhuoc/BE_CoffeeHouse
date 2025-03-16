@@ -24,7 +24,7 @@ namespace CoffeeHouseAPI.Services.ProductService
                 .Include(x => x.Category)
                 .Include(x => x.ProductSizes.Where(x => x.IsValid).OrderBy(y => y.Price))
                 .Include(x => x.Toppings)
-                .Include(x => x.Reviews)
+                .Include(x => x.Reviews).ThenInclude(x => x.Customer).ThenInclude(y => y!.AvatarImageNavigation)
                 .Include(x => x.Discount)
                 .Where(x => x.IsValid);
 

@@ -85,6 +85,9 @@ namespace CoffeeHouseAPI.Helper
             // Create mapping profile for REVIEW
             CreateMap<ReviewDTO, Review>();
             CreateMap<Review, ReviewDTO>();
+            CreateMap<ReviewResponseDTO, Review>();
+            CreateMap<Review, ReviewResponseDTO>()
+                .ForMember(x => x.Customer, options => options.MapFrom(s => MasterAuth.MappingLoginResponseFromAccountAndCustomer(s.Customer)));
 
             // Create mapping profile for CUSTOMER
 

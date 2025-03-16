@@ -56,14 +56,14 @@ namespace CoffeeHouseAPI.Helper
                 return;
             }
 
-            var customer = _context.Customers.Where(x => x.Id == account.Id).FirstOrDefault()
-                ?? new Customer();
+            var customer = _context.Customers.Where(x => x.Id == account.Id && x.IsValid).FirstOrDefault();
 
-            if (_admin == false || customer.IdRole == _admin)
+            if (customer != null && (_admin == false || customer.IdRole == _admin))
             {
                 LoginResponse loginResponse = MappingLoginResponseFromAccountAndCustomer(customer);
 
                 context.HttpContext.Items["LoginResponse"] = loginResponse;
+
                 return;
             }
             else
@@ -83,6 +83,7 @@ namespace CoffeeHouseAPI.Helper
                 Phone = customer.Phone,
                 IdRole = customer.IdRole,
                 Email = customer.Email,
+                AvatarImage = customer.AvatarImageNavigation?.FirebaseImage ?? "https://firebasestorage.googleapis.com/v0/b/shopoes-2e0b8.appspot.com/o/coffee_house%2Fdefault_avatar.png?alt=media&token=d1d661aa-7772-4bda-86ea-3a3b66ca513b"
             };
             return loginResponse;
         }

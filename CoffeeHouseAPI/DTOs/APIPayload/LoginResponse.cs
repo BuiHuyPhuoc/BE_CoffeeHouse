@@ -11,5 +11,6 @@ namespace CoffeeHouseAPI.DTOs.APIPayload
         [Required(ErrorMessage = "IdRole is missing")]
         public bool IdRole { get; set; }
         public string Email { get; set; } = null!;
+        public string AvatarImage { get; set; } = null!;
     }
 }

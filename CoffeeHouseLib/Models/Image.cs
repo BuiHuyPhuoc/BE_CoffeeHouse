@@ -15,6 +15,8 @@ public partial class Image
 
     public string? FirebaseImage { get; set; }
 
+    public virtual ICollection<Customer> Customers { get; set; } = new List<Customer>();
+
     public virtual ImageClass ImageClass { get; set; } = null!;
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
