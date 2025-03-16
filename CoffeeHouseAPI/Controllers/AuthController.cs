@@ -208,7 +208,7 @@ namespace CoffeeHouseAPI.Controllers
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
-                Message = "Register account success. Please check your email to get OTP.",
+                Message = "Check your email or spam email to get verify link.",
                 Status = (int)StatusCodes.Status200OK,
             });
         }
