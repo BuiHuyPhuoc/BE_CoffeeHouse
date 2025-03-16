@@ -57,7 +57,7 @@ namespace CoffeeHouseAPI.Controllers
 
             var customer = await _context.Customers
                             .Include(x => x.Account)
-                            .Include(x => x.AvatarImage)
+                            .Include(x => x.AvatarImageNavigation)
                             .Where(x => x.Email == request.Email && x.IsValid == true)
                             .FirstOrDefaultAsync();
 
