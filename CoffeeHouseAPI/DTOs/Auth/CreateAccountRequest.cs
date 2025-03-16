@@ -1,4 +1,6 @@
-﻿namespace CoffeeHouseAPI.DTOs.Auth
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CoffeeHouseAPI.DTOs.Auth
 {
     public class CreateAccountRequest
     {

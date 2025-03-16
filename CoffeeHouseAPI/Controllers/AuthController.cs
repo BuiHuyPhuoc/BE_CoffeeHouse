@@ -155,7 +155,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPost]
         [Route("Register")]
-        public async Task<IActionResult> Register([FromBody] UserAccountRequest request)
+        public async Task<IActionResult> Register([FromBody] CreateAccountRequest request)
         {
             Customer? customer = await _context.Customers.Where(x => x.Email == request.Email).FirstOrDefaultAsync();
 
