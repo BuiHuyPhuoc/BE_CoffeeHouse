@@ -19,6 +19,8 @@ public partial class Customer
 
     public bool IsValid { get; set; }
 
+    public int? AvatarImage { get; set; }
+
     public virtual Account? Account { get; set; }
 
     public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
