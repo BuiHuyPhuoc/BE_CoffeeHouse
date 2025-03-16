@@ -475,12 +475,10 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Reviews)
                 .HasForeignKey(d => d.CustomerId)
-                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__Review__Customer__2EDAF651");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Reviews)
                 .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__Review__ProductI__2FCF1A8A");
         });
 
