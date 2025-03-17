@@ -49,7 +49,10 @@ namespace CoffeeHouseAPI.Controllers
         [Route("TestNotify")]
         public async Task<IActionResult> TestNotify(string token)
         {
-            await _firebaseService.SendNotificationAsync(token, "title", "testttt");
+            if (!await _firebaseService.SendNotificationAsync(token, "title", "testttt"))
+            {
+                return BadRequest();
+            }
             return Ok();
         }
 

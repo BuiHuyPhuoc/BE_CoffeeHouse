@@ -13,10 +13,12 @@ namespace CoffeeHouseAPI.Services.Firebase
         private readonly string _imageBucket = "shopoes-2e0b8.appspot.com";
         private readonly string _imageFolder = "coffee_house";
         private readonly string _firebaseServerKey;
+        private string _projectId;
 
         public FirebaseService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
             var firebaseConfig = configuration.GetSection("FirebaseConfig").Get<FirebaseConfig>() ?? throw new Exception("Missing Firebase configuration");
+            _projectId = firebaseConfig.ProjectId;
             _firebaseServerKey = firebaseConfig.AuthSecret;
             _httpClient = httpClientFactory.CreateClient();
 
@@ -55,21 +57,37 @@ namespace CoffeeHouseAPI.Services.Firebase
 
         public async Task<bool> SendNotificationAsync(string deviceToken, string title, string body)
         {
+            // Lấy access token từ GoogleCredential
+            string accessToken = await GetAccessTokenAsync();
+
             var message = new
             {
-                to = deviceToken,
-                notification = new { title, body, sound = "default" },
-                data = new { click_action = "FLUTTER_NOTIFICATION_CLICK" }
+                message = new
+                {
+                    token = deviceToken,
+                    notification = new { title, body }
+                }
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://fcm.googleapis.com/fcm/send")
+            string fcmUrl = $"https://fcm.googleapis.com/v1/projects/{_projectId}/messages:send";
+
+            var request = new HttpRequestMessage(HttpMethod.Post, fcmUrl)
             {
-                Headers = { { "Authorization", _firebaseServerKey } },
+                Headers = { { "Authorization", $"Bearer {accessToken}" } }, // Dùng Bearer Token
                 Content = new StringContent(JsonConvert.SerializeObject(message), Encoding.UTF8, "application/json")
             };
 
             var response = await _httpClient.SendAsync(request);
             return response.IsSuccessStatusCode;
+        }
+
+
+        private async Task<string> GetAccessTokenAsync()
+        {
+            var credential = await GoogleCredential.GetApplicationDefaultAsync();
+            var scopedCredential = credential.CreateScoped("https://www.googleapis.com/auth/firebase.messaging");
+            var token = await scopedCredential.UnderlyingCredential.GetAccessTokenForRequestAsync();
+            return token;
         }
     }
 

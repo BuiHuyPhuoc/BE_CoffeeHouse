@@ -16,4 +16,10 @@
         DELIVERING,
         DELIVERED,
     }
+
+    public enum DiscountType
+    {
+        PERCENT,
+        VALUE,
+    }
 }

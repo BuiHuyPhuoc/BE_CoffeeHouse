@@ -2,6 +2,7 @@
 using CoffeeHouseAPI.DTOs.AI;
 using CoffeeHouseAPI.DTOs.Discount;
 using CoffeeHouseAPI.DTOs.Product;
+using CoffeeHouseAPI.Enums;
 using CoffeeHouseLib.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,24 @@ namespace CoffeeHouseAPI.Services.ProductService
         public ProductService(DbcoffeeHouseContext context, IMapper mapper)
         {
             _context = context;
+        }
+
+        public decimal GetProductPrice(Product product, ProductSize productSize)
+        {
+            if (product.Discount != null)
+            {
+                if (product.Discount.DiscountType == DiscountType.PERCENT.ToString())
+                {
+                    return productSize.Price - productSize.Price * product.Discount.DiscountValue / 100;
+                }
+                else
+                {
+                    return productSize.Price - product.Discount.DiscountValue;
+                }
+            } else
+            {
+                return productSize.Price;
+            }
         }
 
         public List<Product> GetProductWithRelate(bool isNoTracking = false)

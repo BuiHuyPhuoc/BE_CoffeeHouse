@@ -5,5 +5,7 @@ namespace CoffeeHouseAPI.Services.VoucherService
     public interface IVoucherService
     {
         bool ValidateVoucher(Voucher voucher);
+
+        List<Voucher> GetAllVoucherWithRalate(bool asNoTracking);
     }
 }

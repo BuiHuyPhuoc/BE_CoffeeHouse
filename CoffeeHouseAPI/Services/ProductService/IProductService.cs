@@ -7,5 +7,7 @@ namespace CoffeeHouseAPI.Services.ProductService
         List<Product> GetProductWithRelate(bool isNoTracking = false);
 
         List<Product> GetTopSaleProductWithRelate(bool isNoTracking = false);
+
+        decimal GetProductPrice(Product product, ProductSize productSize);
     }
 }
