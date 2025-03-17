@@ -39,7 +39,7 @@ namespace CoffeeHouseAPI.Controllers
 
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
 
-            var getProductSize = _context.ProductSizes.Where(x => x.Id == request.ProductSizeId).FirstOrDefault();
+            var getProductSize = _context.ProductSizes.Where(x => x.Id == request.ProductSizeId && x.IsValid).FirstOrDefault();
             if (getProductSize == null)
             {
                 return BadRequest(new APIResponseBase
@@ -234,6 +234,49 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        [HttpPost]
+        [Route("ChangeQuantityCart")]
+        [MasterAuth]
+        public async Task<IActionResult> ChangeQuantityCart([FromBody] ChangeQuantityCartDTO request)
+        {
+            var cart = await _context.Carts
+                .Include(x => x.CartDetails)
+                .Where(x => x.Id == request.CartId)
+                .FirstOrDefaultAsync();
+
+            if (request.Quantity <= 0)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Quantity must be greater than 0",
+                    Status = (int)HttpStatusCode.BadRequest,
+                });
+            }
+
+            if (cart == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.GET),
+                    Status = (int)HttpStatusCode.BadRequest,
+                });
+            }
+
+            cart.Quantity = request.Quantity;
+            cart.UpdatedAt = DateTime.Now;
+
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
+                Status = (int)HttpStatusCode.OK,
+            });
+        }
+
         private List<Cart> GetCartBy(int customerId, bool isTracking = false)
         {
             List<Cart> carts = new List<Cart>();
@@ -246,7 +289,8 @@ namespace CoffeeHouseAPI.Controllers
                 .Where(x => x.CustomerId == customerId)
                 .AsNoTracking()
                 .ToList();
-            } else
+            }
+            else
             {
                 carts = _context.Carts
                 .Include(x => x.CartDetails).ThenInclude(y => y.Topping)
