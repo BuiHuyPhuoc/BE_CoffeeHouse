@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Reflection.Metadata.Ecma335;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -57,19 +58,20 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpPost]
         [Route("UpdateUserInformation")]
-        public async Task<IActionResult> UpdateUserInformation([FromBody] UserInformationDTO request)
+        public async Task<IActionResult> UpdateUserInformation([FromBody] UpdateCustomerDTO request)
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
-            
-            if (loginResponse.Email != request.Email) return Unauthorized();
 
-            var customer = await _context.Customers.Where(x => x.Id == request.Id).FirstOrDefaultAsync();
+            var customer = await _context.Customers.Where(x => x.Id == loginResponse.Id).FirstOrDefaultAsync();
             if (customer == null) return Unauthorized();
 
-            customer.FullName = request.FullName;
-            customer.DateOfBirth = request.DateOfBirth;
-            customer.Phone = request.PhoneNumber;
-            customer.IdRole = request.Role;
+            if (request.IdRole != null && loginResponse.IdRole != true)
+                return Unauthorized();
+
+            customer.FullName = request.FullName ?? customer.FullName;
+            customer.DateOfBirth = request.DateOfBirth ?? customer.DateOfBirth;
+            customer.Phone = request.Phone ?? customer.Phone;
+            customer.IdRole = request.IdRole ?? customer.IdRole;
 
             await this.SaveChanges(_context);
             loginResponse = MasterAuth.MappingLoginResponseFromAccountAndCustomer(customer);
@@ -89,7 +91,7 @@ namespace CoffeeHouseAPI.Controllers
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
             var customer = await _context.Customers.Where(x => x.Id == loginResponse.Id && x.IsValid).FirstOrDefaultAsync();
-            
+
             if (customer == null) return Unauthorized();
 
             var imageClass = await _context.ImageClasses.Where(x => x.Id == request.ImageClassId).AsNoTracking().FirstOrDefaultAsync();
@@ -111,7 +113,7 @@ namespace CoffeeHouseAPI.Controllers
 
             // Add to database
             Image image = _mapper.Map<Image>(request);
-            
+
             image.FirebaseImage = downloadUrl;
             _context.Images.Add(image);
             await this.SaveChanges(_context);

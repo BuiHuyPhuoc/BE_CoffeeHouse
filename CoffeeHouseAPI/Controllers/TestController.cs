@@ -40,7 +40,7 @@ namespace CoffeeHouseAPI.Controllers
 
         [HttpGet]
         [Route("Test")]
-        public async Task<IActionResult> Test()
+        public IActionResult Test()
         {
             return Ok();
         }

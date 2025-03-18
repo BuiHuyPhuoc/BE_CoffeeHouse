@@ -43,7 +43,7 @@ namespace CoffeeHouseAPI.Services.Email
                 ", otpString, expire.ToString("dd/MM/yyyy HH:mm:ss"));
         }
 
-        public static string SendMailExceptionTemplate(string messageException)
+        public static string SendMailExceptionTemplate(string[] messageException)
         {
             return string.Format(@"
                 <!DOCTYPE html>
@@ -54,6 +54,9 @@ namespace CoffeeHouseAPI.Services.Email
                 <body>
                 <p><strong>Thông báo từ hệ thống.</strong></p>
                 <p>Lỗi ghi nhận được: {0}</p>
+                <p>URL: {1}</p>
+                <p>Method: {2}</p>
+                <p>Body: {3}</p>
                 <i>Đây là email tự động từ hệ thống Coffee House, vui lòng không phản hồi.</i>
                 <p>Trân trọng cảm ơn đã sử dụng dịch vụ của Coffee House.</p>
                 </body>
