@@ -32,6 +32,18 @@ namespace CoffeeHouseAPI.Services.VoucherService
             return vouchers;
         }
 
+        public decimal PriceAfterApplyVoucher(decimal totalPrice, Voucher voucher)
+        {
+            if (voucher.DiscountType == "Percent")
+            {
+                return totalPrice - (totalPrice * voucher.DiscountValue / 100);
+            }
+            else
+            {
+                return totalPrice - voucher.DiscountValue;
+            }
+        }
+
         public bool ValidateVoucher(Voucher voucher)
         {
             return (((voucher.EndDate != null && voucher.EndDate >= DateTime.Now) || voucher.EndDate == null)

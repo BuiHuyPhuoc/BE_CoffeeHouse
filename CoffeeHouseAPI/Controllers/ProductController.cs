@@ -246,7 +246,7 @@ namespace CoffeeHouseAPI.Controllers
 
             var mlContext = new MLContext();
 
-            var data = mlContext.Data.LoadFromEnumerable(products.Select(d => new { Description2 = d.Description2 }));
+            var data = mlContext.Data.LoadFromEnumerable(products.Select(d => new { Description2 = d.Material }));
 
             var pipeline = mlContext.Transforms.Text.FeaturizeText("Feature", "Description2");
 
@@ -262,7 +262,7 @@ namespace CoffeeHouseAPI.Controllers
                 Product = d,
                 Similarity = CosineSimilarity(favoriteFeatures, features[index].Feature)
             })
-            .Where(x => x.Product.Id != exampleProduct.Id && x.Similarity >= 0.3)
+            .Where(x => x.Product.Id != exampleProduct.Id)
             .OrderByDescending(x => x.Similarity)
             .Take(3)
             .ToList();

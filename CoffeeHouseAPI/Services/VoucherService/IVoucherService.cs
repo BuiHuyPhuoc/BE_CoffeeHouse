@@ -7,5 +7,7 @@ namespace CoffeeHouseAPI.Services.VoucherService
         bool ValidateVoucher(Voucher voucher);
 
         List<Voucher> GetAllVoucherWithRalate(bool asNoTracking);
+
+        decimal PriceAfterApplyVoucher(decimal totalPrice, Voucher voucher);
     }
 }
