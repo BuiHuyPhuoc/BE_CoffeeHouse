@@ -2,6 +2,7 @@
 using CoffeeHouseAPI.Services.Email;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 
 namespace CoffeeHouseAPI.Extensions.MiddleWares
@@ -10,17 +11,12 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
     {
 
         private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionMiddleWare> _logger;
-        private readonly IHostEnvironment _hostEnvironment;
-
+        private string requestBody = string.Empty;
         public ExceptionMiddleWare(
             RequestDelegate next,
-            ILogger<ExceptionMiddleWare> logger,
             IHostEnvironment hostEnvironment)
         {
             _next = next;
-            _logger = logger;
-            _hostEnvironment = hostEnvironment;
         }
 
         public async Task InvokeAsync(HttpContext httpContext, IServiceProvider serviceProvider)
@@ -55,16 +51,21 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
                     return;
                 }
 
+                requestBody = await ReadRequestBody(httpContext);
+
                 await _next(httpContext);
             }
             catch (Exception ex)
             {
+                string url = httpContext.Request.Path; 
+                string method = httpContext.Request.Method;
+
                 try
                 {
                     var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
                     var recipients = new List<string> { "buihuyphuoc42.dev@gmail.com", "nldangkhoa0712@gmail.com", "nguyenngocminhkhoa.dev@gmail.com" };
                     var subject = "🚨 System Error Alert";
-                    var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
+                    var message = EMAIL_TEMPLATE.SendMailExceptionTemplate(new string[] { ex.InnerException != null ? ex.InnerException.Message : ex.Message, url, method, requestBody });
                     _ = emailSender.SendEmailAsync(recipients, subject, message, null, null);
                 }
                 finally
@@ -78,6 +79,24 @@ namespace CoffeeHouseAPI.Extensions.MiddleWares
                         Detail = "An unexpected error occurred.",
                     });
                 }
+            }
+        }
+        private async Task<string> ReadRequestBody(HttpContext httpContext)
+        {
+            try
+            {
+                httpContext.Request.EnableBuffering();
+
+                using var reader = new StreamReader(httpContext.Request.Body, Encoding.UTF8, leaveOpen: true);
+
+                string body = await reader.ReadToEndAsync();
+                httpContext.Request.Body.Position = 0; 
+
+                return body;
+            }
+            catch
+            {
+                return "Cannot read request body";
             }
         }
 
