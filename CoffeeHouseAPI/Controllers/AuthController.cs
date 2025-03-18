@@ -50,7 +50,6 @@ namespace CoffeeHouseAPI.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login([FromBody] LoginResquest request)
         {
-            throw new Exception("Test excpetion");
             if (request.Password.Length < 8)
             {
                 ModelState.AddModelError("Password", "Password length is more than 8");
