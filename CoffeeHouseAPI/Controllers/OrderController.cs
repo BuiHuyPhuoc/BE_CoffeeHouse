@@ -70,6 +70,16 @@ namespace CoffeeHouseAPI.Controllers
                         Status = (int)HttpStatusCode.BadRequest
                     });
                 }
+
+                if (voucher.MinOrderValue > request.TotalPrice)
+                {
+                    return BadRequest(new APIResponseBase
+                    {
+                        IsSuccess = false,
+                        Message = "Tổng giá trị đơn hàng không đủ để sử dụng voucher",
+                        Status = (int)HttpStatusCode.BadRequest
+                    });
+                }
             }
 
             Address? address = _context.Addresses.Where(x => x.Id == request.AddressId && x.CustomerId == loginResponse.Id).FirstOrDefault();
