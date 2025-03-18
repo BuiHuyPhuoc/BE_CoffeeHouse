@@ -59,6 +59,7 @@ namespace CoffeeHouseAPI.Controllers
                             .Include(x => x.Account)
                             .Include(x => x.AvatarImageNavigation)
                             .Where(x => x.Email == request.Email && x.IsValid == true)
+                            .AsNoTracking()
                             .FirstOrDefaultAsync();
 
             if (customer == null || customer.Account == null)
@@ -73,7 +74,6 @@ namespace CoffeeHouseAPI.Controllers
 
             if (customer.Account.BlockExpire != null && customer.Account.BlockExpire > DateTime.Now)
             {
-
                 return BadRequest(new APIResponseBase
                 {
                     IsSuccess = false,
@@ -81,7 +81,6 @@ namespace CoffeeHouseAPI.Controllers
                     Status = (int)StatusCodes.Status400BadRequest,
                 });
             }
-
 
             if (customer.Account.Password != request.Password)
             {

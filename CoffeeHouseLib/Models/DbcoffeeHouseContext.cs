@@ -191,9 +191,12 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("Customer");
 
+            entity.HasIndex(e => e.Email, "IX_CUSTOMER_EMAIL");
+
             entity.HasIndex(e => e.Id, "UQ__Customer__3214EC0663F39AEF").IsUnique();
 
             entity.Property(e => e.DateOfBirth).HasColumnType("datetime");
+            entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.FullName).HasMaxLength(255);
             entity.Property(e => e.IsValid).HasDefaultValue(true);
             entity.Property(e => e.Phone).HasMaxLength(12);
@@ -257,9 +260,15 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("Order");
 
+            entity.HasIndex(e => e.Id, "IX_ORDER_ID");
+
             entity.HasIndex(e => e.Id, "UQ__Order__3214EC06C31E2FAF").IsUnique();
 
             entity.Property(e => e.OrderDate).HasColumnType("datetime");
+            entity.Property(e => e.OrderPaid).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.OrderValue).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.PaymentId).HasMaxLength(2255);
+            entity.Property(e => e.PaymentMethod).HasMaxLength(50);
 
             entity.HasOne(d => d.Address).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.AddressId)

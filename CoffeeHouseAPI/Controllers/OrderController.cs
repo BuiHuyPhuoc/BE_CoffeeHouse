@@ -27,8 +27,15 @@ namespace CoffeeHouseAPI.Controllers
         readonly IMapper _mapper;
         private readonly IOrderService _orderService;
         readonly IHubContext<OrderHub> _hubContext;
+        private readonly IConfiguration _configuration;
 
-        public OrderController(DbcoffeeHouseContext context, IProductService productService, IVoucherService voucherService, IMapper mapper, IOrderService orderService, IHubContext<OrderHub> hubContext)
+        public OrderController(DbcoffeeHouseContext context,
+                                IProductService productService,
+                                IVoucherService voucherService,
+                                IMapper mapper,
+                                IOrderService orderService,
+                                IHubContext<OrderHub> hubContext,
+                                IConfiguration configuration)
         {
             _mapper = mapper;
             _context = context;
@@ -36,6 +43,7 @@ namespace CoffeeHouseAPI.Controllers
             _productService = productService;
             _orderService = orderService;
             _hubContext = hubContext;
+            _configuration = configuration;
         }
 
         [HttpPost]
@@ -56,31 +64,9 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             Voucher? voucher = null;
+            //decimal totalPrice = GetPriceFromRequestCreateOrder(request);
 
-            if (request.VoucherId != null)
-            {
-                voucher = await _context.Vouchers.Where(x => x.Id == request.VoucherId && x.IsActive == true).FirstOrDefaultAsync();
-
-                if (voucher == null || _voucherService.ValidateVoucher(voucher) == false)
-                {
-                    return BadRequest(new APIResponseBase
-                    {
-                        IsSuccess = false,
-                        Message = "Voucher không hợp lệ",
-                        Status = (int)HttpStatusCode.BadRequest
-                    });
-                }
-
-                if (voucher.MinOrderValue > request.TotalPrice)
-                {
-                    return BadRequest(new APIResponseBase
-                    {
-                        IsSuccess = false,
-                        Message = "Tổng giá trị đơn hàng không đủ để sử dụng voucher",
-                        Status = (int)HttpStatusCode.BadRequest
-                    });
-                }
-            }
+            request.CartIds = request.CartIds.Distinct().ToList();
 
             Address? address = _context.Addresses.Where(x => x.Id == request.AddressId && x.CustomerId == loginResponse.Id).FirstOrDefault();
 
@@ -103,6 +89,10 @@ namespace CoffeeHouseAPI.Controllers
                     newOrder.CustomerId = loginResponse.Id;
                     newOrder.OrderDate = DateTime.Now;
                     newOrder.AddressId = address.Id;
+                    newOrder.OrderPaid = 0;
+                    newOrder.OrderValue = 0;
+                    newOrder.PaymentMethod = request.PaymentMethod;
+                    newOrder.PaymentId = newOrder.OrderDate.ToString("yyyyMMddHHmmss");
 
                     _context.Orders.Add(newOrder);
                     await this.SaveChanges(_context);
@@ -111,17 +101,26 @@ namespace CoffeeHouseAPI.Controllers
 
                     List<CreateOrderDetailDTO> createOrderDetailDTOs = new List<CreateOrderDetailDTO>();
 
+                    decimal orderValue = 0;
+
                     foreach (var cartOrderId in request.CartIds)
                     {
                         var cart = _context.Carts
                             .Include(x => x.CartDetails).ThenInclude(y => y.Topping)
-                            .Where(x => x.Id == cartOrderId).FirstOrDefault();
+                            .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.Discount)
+                            .AsNoTracking()
+                            .Where(x => x.Id == cartOrderId)
+                            .FirstOrDefault();
 
                         if (cart == null) throw new BaseException("Mã sản phẩm trong giỏ hàng không tồn tại.");
 
                         CreateOrderDetailDTO createOrderDetailDTO = new CreateOrderDetailDTO();
                         createOrderDetailDTO.ProductSizeId = cart.ProductSizeId;
                         createOrderDetailDTO.Quantity = cart.Quantity;
+
+                        orderValue += _productService.GetProductPrice(cart.ProductSize.Product, cart.ProductSize) * cart.Quantity;
+
+                        decimal toppingValue = 0;
 
                         List<ToppingOrderDTO> toppingOrderDTOs = new List<ToppingOrderDTO>();
                         if (cart.CartDetails.Count > 0)
@@ -141,6 +140,7 @@ namespace CoffeeHouseAPI.Controllers
                                 toppingOrder.Id = cartDetail.Topping.Id;
                                 toppingOrder.Quantity = cartDetail.Quantity ?? 1;
                                 toppingOrderDTOs.Add(toppingOrder);
+                                toppingValue += cartDetail.Topping.ToppingPrice * cartDetail.Quantity ?? 1;
                             }
                         }
 
@@ -148,7 +148,48 @@ namespace CoffeeHouseAPI.Controllers
                         createOrderDetailDTO.Note = string.Empty;
 
                         createOrderDetailDTOs.Add(createOrderDetailDTO);
+
+                        orderValue += toppingValue * cart.Quantity;
                     }
+
+                    //if (orderValue != request.TotalPrice)
+                    //{
+                    //    throw new BaseException("Tổng giá trị đơn hàng không chính xác.");
+                    //}
+
+                    if (request.VoucherId != null)
+                    {
+                        voucher = await _context.Vouchers.Where(x => x.Id == request.VoucherId && x.IsActive == true).FirstOrDefaultAsync();
+
+                        if (voucher == null || _voucherService.ValidateVoucher(voucher) == false)
+                        {
+                            return BadRequest(new APIResponseBase
+                            {
+                                IsSuccess = false,
+                                Message = "Voucher không hợp lệ",
+                                Status = (int)HttpStatusCode.BadRequest
+                            });
+                        }
+
+                        if (voucher.MinOrderValue > orderValue)
+                        {
+                            return BadRequest(new APIResponseBase
+                            {
+                                IsSuccess = false,
+                                Message = "Tổng giá trị đơn hàng không đủ để sử dụng voucher",
+                                Status = (int)HttpStatusCode.BadRequest
+                            });
+                        }
+                        else
+                        {
+                            orderValue = _voucherService.PriceAfterApplyVoucher(orderValue, voucher);
+                            newOrder.VoucherId = voucher.Id;
+                        }
+                    }
+
+                    newOrder.OrderValue = orderValue;
+
+                    await this.SaveChanges(_context);
 
                     await CreateOrderDetail(newOrder.Id, createOrderDetailDTOs);
 
@@ -166,11 +207,22 @@ namespace CoffeeHouseAPI.Controllers
 
                     await _hubContext.Clients.All.SendAsync("OrderUpdated");
 
+                    string urlPayment = string.Empty;
+                    if (request.PaymentMethod == "ONLINE")
+                    {
+                        urlPayment = CreateUrlPayment(newOrder);
+                    }
+                    else
+                    {
+                        urlPayment = "localhost:1234";
+                    }
+
                     return Ok(new APIResponseBase
                     {
                         IsSuccess = true,
                         Status = (int)HttpStatusCode.OK,
                         Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
+                        Value = urlPayment
                     });
                 }
                 catch (BaseException baseEx)
@@ -305,6 +357,25 @@ namespace CoffeeHouseAPI.Controllers
         public IActionResult GetAllOrder()
         {
             var orders = _orderService.GetAllOrderWithRelate(true).OrderByDescending(x => x.OrderDate);
+
+            var orderDTOs = _mapper.Map<List<OrderResponseDTO>>(orders);
+            return Ok(new APIResponseBase
+            {
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderDTOs,
+                Status = (int)StatusCodes.Status200OK,
+                IsSuccess = true
+            });
+        }
+
+        [HttpGet]
+        [Route(nameof(GetAllCustomerOrder))]
+        [MasterAuth()]
+        public IActionResult GetAllCustomerOrder()
+        {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+
+            var orders = _orderService.GetAllOrderWithRelate(true).OrderByDescending(x => x.OrderDate).Where(x => x.CustomerId == loginResponse.Id).ToList();
 
             var orderDTOs = _mapper.Map<List<OrderResponseDTO>>(orders);
             return Ok(new APIResponseBase
@@ -552,6 +623,110 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
+        //private decimal GetPriceFromRequestCreateOrder(CreateOrderCartDTO request)
+        //{
+        //    decimal orderValue = 0;
+
+        //    foreach (var cartOrderId in request.CartIds)
+        //    {
+        //        var cart = _context.Carts
+        //            .Include(x => x.CartDetails).ThenInclude(y => y.Topping)
+        //            .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.Discount)
+        //            .Where(x => x.Id == cartOrderId)
+        //            .AsNoTracking()
+        //            .FirstOrDefault();
+
+        //        if (cart == null) throw new BaseException("Mã sản phẩm trong giỏ hàng không tồn tại.");
+
+        //        CreateOrderDetailDTO createOrderDetailDTO = new CreateOrderDetailDTO();
+        //        createOrderDetailDTO.ProductSizeId = cart.ProductSizeId;
+        //        createOrderDetailDTO.Quantity = cart.Quantity;
+
+        //        orderValue += _productService.GetProductPrice(cart.ProductSize.Product, cart.ProductSize) * cart.Quantity;
+
+        //        decimal toppingValue = 0;
+
+        //        List<ToppingOrderDTO> toppingOrderDTOs = new List<ToppingOrderDTO>();
+        //        if (cart.CartDetails.Count > 0)
+        //        {
+        //            foreach (var cartDetail in cart.CartDetails)
+        //            {
+        //                if (cartDetail.Topping == null)
+        //                {
+        //                    throw new BaseException($"Topping không tồn tại.");
+        //                }
+        //                else if (cartDetail.Topping.IsValid == false)
+        //                {
+        //                    throw new BaseException($"Topping {cartDetail.Topping.ToppingName} đã ngưng bán.");
+        //                }
+
+        //                ToppingOrderDTO toppingOrder = new ToppingOrderDTO();
+        //                toppingOrder.Id = cartDetail.Topping.Id;
+        //                toppingOrder.Quantity = cartDetail.Quantity ?? 1;
+        //                toppingOrderDTOs.Add(toppingOrder);
+        //                toppingValue += cartDetail.Topping.ToppingPrice * cartDetail.Quantity ?? 1;
+        //            }
+        //        }
+
+        //        createOrderDetailDTO.Toppings = toppingOrderDTOs;
+        //        createOrderDetailDTO.Note = string.Empty;
+
+        //        createOrderDetailDTOs.Add(createOrderDetailDTO);
+
+        //        orderValue += toppingValue * cart.Quantity;
+        //    }
+        //}
+
+        private decimal GetValueCartOrder(CreateOrderCartDTO createOrderCartDTO)
+        {
+            decimal value = 0;
+            foreach (var cartId in createOrderCartDTO.CartIds)
+            {
+                var cart = _context.Carts
+                    .Include(x => x.ProductSize).ThenInclude(y => y.Product).ThenInclude(z => z.Discount)
+                    .Where(x => x.Id == cartId)
+                    .AsNoTracking()
+                    .FirstOrDefault();
+
+                if (cart != null)
+                {
+                    value += _productService.GetProductPrice(cart.ProductSize.Product, cart.ProductSize) * cart.Quantity;
+                }
+            }
+            return value;
+        }
+
+        private string CreateUrlPayment(Order order)
+        {
+            string vnp_Url = _configuration["PaymentKey:VNPay:vnp_Url"]?.ToString() ?? string.Empty;
+            string vnp_TmnCode = _configuration["PaymentKey:VNPay:vnp_TmnCode"]?.ToString() ?? string.Empty;
+            string vnp_HashSecret = _configuration["PaymentKey:VNPay:vnp_HashSecret"]?.ToString() ?? string.Empty;
+
+            decimal orderValue = _orderService.GetTotalPriceOrder(order);
+
+            VNPayLibrary vnpay = new VNPayLibrary();
+
+            vnpay.AddRequestData("vnp_Version", VNPayLibrary.VERSION);
+            vnpay.AddRequestData("vnp_Command", "pay");
+            vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
+            vnpay.AddRequestData("vnp_Amount", (orderValue * 100).ToString()); //Số tiền thanh toán. Số tiền không mang các ký tự phân tách thập phân, phần nghìn, ký tự tiền tệ. Để gửi số tiền thanh toán là 100,000 VND (một trăm nghìn VNĐ) thì merchant cần nhân thêm 100 lần (khử phần thập phân), sau đó gửi sang VNPAY là: 10000000
+            vnpay.AddRequestData("vnp_BankCode", "VNBANK");
+            vnpay.AddRequestData("vnp_CreateDate", order.OrderDate.ToString("yyyyMMddHHmmss"));
+            vnpay.AddRequestData("vnp_CurrCode", "VND");
+            vnpay.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(HttpContext));
+            vnpay.AddRequestData("vnp_Locale", "vn");
+
+            vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang: " + order.Id);
+            vnpay.AddRequestData("vnp_OrderType", "other");
+
+            vnpay.AddRequestData("vnp_ReturnUrl", "https://localhost:1234/");
+            vnpay.AddRequestData("vnp_TxnRef", order.PaymentId ?? order.OrderDate.ToString("yyyyMMddHHmmss"));
+
+            string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
+
+            return paymentUrl;
+        }
+
         private async Task CreateOrderStatus(int id, string v)
         {
             OrderLog orderLog = new OrderLog();
@@ -591,6 +766,8 @@ namespace CoffeeHouseAPI.Controllers
                 }
             }
         }
+
+
 
         private async Task CreateOrderTopping(int id, List<ToppingOrderDTO> toppings)
         {

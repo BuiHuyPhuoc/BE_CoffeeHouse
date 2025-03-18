@@ -15,6 +15,14 @@ public partial class Order
 
     public int AddressId { get; set; }
 
+    public decimal? OrderValue { get; set; }
+
+    public decimal? OrderPaid { get; set; }
+
+    public string? PaymentMethod { get; set; }
+
+    public string? PaymentId { get; set; }
+
     public virtual Address Address { get; set; } = null!;
 
     public virtual Customer Customer { get; set; } = null!;

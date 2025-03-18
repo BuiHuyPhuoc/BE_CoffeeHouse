@@ -13,6 +13,6 @@ namespace CoffeeHouseAPI.DTOs.Order
         public int AddressId { get; set; }
 
         [Required]
-        public decimal TotalPrice { get; set; }
+        public string PaymentMethod { get; set; } = null!;
     }
 }
