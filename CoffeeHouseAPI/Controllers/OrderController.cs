@@ -12,6 +12,7 @@ using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -621,6 +622,77 @@ namespace CoffeeHouseAPI.Controllers
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
                 Value = orderStatusDTOs
             });
+        }
+
+
+        [HttpPost]
+        [Route("UpdatePaymentStatus")]
+        [MasterAuth]
+        public async Task<IActionResult> UpdatePaymentStatus([FromBody] UpdatePaymentStatusDTO request)
+        {
+            var order = _orderService.GetAllOrderWithRelate(true).Where(x => x.PaymentId == request.PaymentId).FirstOrDefault();
+            if (order == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (order.OrderValue != request.PaymentValue)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Giá trị thanh toán không chính xác",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (order.OrderPaid > 0)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng đã được thanh toán",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            if (request.PaymentStatus == "SUCCESS")
+            {
+                order.OrderPaid = order.OrderValue;
+                order.PaymentStatus = request.PaymentStatus;
+                order.PaymentDate = DateTime.Now;
+                order.PaymentId = request.PaymentId;
+                order.PaymentMethod = "ONLINE";
+                _context.Orders.Update(order);
+                await this.SaveChanges(_context);
+            }
+            else if (request.PaymentStatus == "FAILED")
+            {
+                order.PaymentStatus = request.PaymentStatus;
+                _context.Orders.Update(order);
+                await this.SaveChanges(_context);
+            }
+
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
+            });
+
+        }
+
+        public class UpdatePaymentStatusDTO
+        {
+            public string PaymentId { get; set; } = null!;
+            public string PaymentStatus { get; set; } = null!;
+            public decimal PaymentValue { get; set; }
+            public DateInterval PaymentDate { get; set; }
         }
 
         //private decimal GetPriceFromRequestCreateOrder(CreateOrderCartDTO request)
