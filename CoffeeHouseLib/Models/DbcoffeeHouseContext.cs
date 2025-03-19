@@ -267,8 +267,10 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.Property(e => e.OrderDate).HasColumnType("datetime");
             entity.Property(e => e.OrderPaid).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.OrderValue).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.PaymentDate).HasColumnType("datetime");
             entity.Property(e => e.PaymentId).HasMaxLength(2255);
             entity.Property(e => e.PaymentMethod).HasMaxLength(50);
+            entity.Property(e => e.PaymentStatus).HasMaxLength(50);
 
             entity.HasOne(d => d.Address).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.AddressId)

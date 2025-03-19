@@ -23,6 +23,10 @@ public partial class Order
 
     public string? PaymentId { get; set; }
 
+    public string? PaymentStatus { get; set; }
+
+    public DateTime? PaymentDate { get; set; }
+
     public virtual Address Address { get; set; } = null!;
 
     public virtual Customer Customer { get; set; } = null!;
