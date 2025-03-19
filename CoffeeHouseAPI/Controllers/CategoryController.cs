@@ -99,7 +99,51 @@ namespace CoffeeHouseAPI.Controllers
             {
                 Status = (int)StatusCodes.Status200OK,
                 Value = _mapper.Map<List<CategoryResponseDTO>>(category),
-                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                IsSuccess = true
+            });
+        }
+
+        [HttpGet]
+        [Route(nameof(GetChildCategory))]
+        public IActionResult GetChildCategory()
+        {
+            var category = _context.Categories.Where(x => x.IdParent != null).ToList();
+            return Ok(new APIResponseBase
+            {
+                Status = (int)StatusCodes.Status200OK,
+                Value = _mapper.Map<List<CategoryResponseDTO>>(category),
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                IsSuccess = true
+            });
+        }
+
+        [HttpPost]
+        [Route(nameof(CreateCategory))]
+        public async Task<IActionResult> CreateCategory([FromBody] CategoryRequestDTO categoryDTO)
+        {
+            var parentCateogry = await _context.Categories.FindAsync(categoryDTO.IdParent);
+
+            if (parentCateogry == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    Status = (int)StatusCodes.Status400BadRequest,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.POST),
+                    IsSuccess = false
+                });
+            }
+
+            var category = _mapper.Map<Category>(categoryDTO);
+            
+            await _context.Categories.AddAsync(category);
+            await this.SaveChanges(_context);
+            
+            return Ok(new APIResponseBase
+            {
+                Status = (int)StatusCodes.Status200OK,
+                Value = _mapper.Map<CategoryResponseDTO>(category),
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST),
                 IsSuccess = true
             });
         }
