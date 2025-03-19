@@ -157,7 +157,7 @@ namespace CoffeeHouseAPI.Controllers
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] CreateAccountRequest request)
         {
-            Customer? customer = await _context.Customers.Where(x => x.Email == request.Email).FirstOrDefaultAsync();
+            Customer? customer = await _context.Customers.Where(x => x.Email == request.Email && x.IsValid == true).FirstOrDefaultAsync();
 
             if (customer != null)
             {
@@ -179,6 +179,7 @@ namespace CoffeeHouseAPI.Controllers
                 DateOfBirth = request.DateOfBirth,
                 IdRole = request.IdRole,
                 AvatarImage = defaultAvatar?.Id ?? null,
+                IsValid = true,
             };
 
             await _context.Customers.AddAsync(newCustomer);
