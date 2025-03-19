@@ -701,6 +701,7 @@ namespace CoffeeHouseAPI.Controllers
             string vnp_Url = _configuration["PaymentKey:VNPay:vnp_Url"]?.ToString() ?? string.Empty;
             string vnp_TmnCode = _configuration["PaymentKey:VNPay:vnp_TmnCode"]?.ToString() ?? string.Empty;
             string vnp_HashSecret = _configuration["PaymentKey:VNPay:vnp_HashSecret"]?.ToString() ?? string.Empty;
+            string vnp_ReturnUrl = _configuration["PaymentKey:VNPay:vnp_ReturnUrl"]?.ToString() ?? string.Empty;
 
             decimal orderValue = _orderService.GetTotalPriceOrder(order);
 
@@ -719,7 +720,7 @@ namespace CoffeeHouseAPI.Controllers
             vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang: " + order.Id);
             vnpay.AddRequestData("vnp_OrderType", "other");
 
-            vnpay.AddRequestData("vnp_ReturnUrl", "https://localhost:1234/");
+            vnpay.AddRequestData("vnp_ReturnUrl", vnp_ReturnUrl);
             vnpay.AddRequestData("vnp_TxnRef", order.PaymentId ?? order.OrderDate.ToString("yyyyMMddHHmmss"));
 
             string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
