@@ -840,6 +840,38 @@ namespace CoffeeHouseAPI.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("GetOrderPriceById")]
+        public IActionResult GetOrderPriceById(int orderId)
+        {
+            var order = _context.Orders
+                .Include(x => x.OrderDetails).ThenInclude(y => y.ProductSize).ThenInclude(z => z.Product).ThenInclude(t => t.Discount)
+                .Include(x => x.OrderDetails).ThenInclude(y => y.OrderToppings)
+                .Include(x => x.Voucher)
+                .AsNoTracking()
+                .FirstOrDefault(x => x.Id == orderId);
+            
+            if (order == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Đơn hàng không tồn tại",
+                    Status = (int)HttpStatusCode.BadRequest
+                });
+            }
+
+            decimal orderValue = _orderService.GetTotalPriceOrder(order);
+            
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+                Value = orderValue
+            });
+        }
+
 
 
         private async Task CreateOrderTopping(int id, List<ToppingOrderDTO> toppings)

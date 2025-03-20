@@ -34,7 +34,7 @@ namespace CoffeeHouseAPI.Services.VoucherService
 
         public decimal PriceAfterApplyVoucher(decimal totalPrice, Voucher voucher)
         {
-            if (voucher.DiscountType == "Percent")
+            if (voucher.DiscountType == "PERCENT")
             {
                 return totalPrice - (totalPrice * voucher.DiscountValue / 100);
             }
