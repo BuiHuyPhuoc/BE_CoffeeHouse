@@ -14,5 +14,7 @@ namespace CoffeeHouseAPI.DTOs.Order
 
         [Required]
         public string PaymentMethod { get; set; } = null!;
+
+        public string? ReturnUrl { get; set; }
     }
 }
