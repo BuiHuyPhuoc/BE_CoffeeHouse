@@ -74,7 +74,7 @@ namespace CoffeeHouseAPI.Services.OrderService
         {
             decimal AllOrderPrice = 0m;
 
-            List<Order> orders = GetAllOrderWithRelate().Where(x => x.OrderLogs.LastOrDefault()!.StatusCode == "DELIVERED").ToList();
+            List<Order> orders = GetAllOrderWithRelate().Where(x => x.OrderLogs.LastOrDefault()!.StatusCode == "DELIVERED" && x.OrderValue == x.OrderPaid).ToList();
 
             foreach (var order in orders)
             {
