@@ -100,6 +100,11 @@ namespace CoffeeHouseAPI.Helper
             CreateMap<CustomerDTO, Customer>();
             CreateMap<Customer, CustomerDTO>();
 
+            CreateMap<CustomerInforDTO, Customer>();
+            CreateMap<Customer, CustomerInforDTO>()
+                .ForMember(x => x.BlockExpire, options => options.MapFrom(s => s.Account!.BlockExpire ?? null))
+                .ForMember(x => x.VerifyTime, options => options.MapFrom(s => s.Account!.VerifyTime ?? null));
+
             // Create mapping profile for ORDER
 
             CreateMap<OrderDetail, OrderDetailDTO>();

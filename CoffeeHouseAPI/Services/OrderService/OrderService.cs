@@ -102,16 +102,13 @@ namespace CoffeeHouseAPI.Services.OrderService
 
             if (order.Voucher != null)
             {
-                if (_voucherService.ValidateVoucher(order.Voucher))
+                if (order.Voucher.DiscountType == DiscountType.PERCENT.ToString())
                 {
-                    if (order.Voucher.DiscountType == DiscountType.PERCENT.ToString())
-                    {
-                        orderPrice -= orderPrice * order.Voucher.DiscountValue / 100;
-                    }
-                    else
-                    {
-                        orderPrice -= order.Voucher.DiscountValue;
-                    }
+                    orderPrice -= orderPrice * order.Voucher.DiscountValue / 100;
+                }
+                else
+                {
+                    orderPrice -= order.Voucher.DiscountValue;
                 }
             }
 

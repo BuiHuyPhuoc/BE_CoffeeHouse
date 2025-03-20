@@ -128,5 +128,24 @@ namespace CoffeeHouseAPI.Controllers
                 Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.PUT),
             });
         }
+
+        [HttpGet]
+        [Route("GetAllUser")]
+        [MasterAuth(true)]
+        public IActionResult GetAllUser()
+        {
+            var customers = _context.Customers
+                .Include(x => x.Account)
+                .Where(x => x.IsValid)
+                .ToList();
+            var customerDTOs = _mapper.Map<List<CustomerInforDTO>>(customers);
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Value = customerDTOs,
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET),
+            });
+        }
     }
 }
