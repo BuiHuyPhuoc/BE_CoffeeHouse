@@ -16,4 +16,11 @@
 
         public bool IsValid { get; set; }
     }
+
+    public class CustomerInforDTO : CustomerDTO
+    {
+        public DateTime? VerifyTime { get; set; }
+        public DateTime? BlockExpire { get; set; }
+
+    }
 }

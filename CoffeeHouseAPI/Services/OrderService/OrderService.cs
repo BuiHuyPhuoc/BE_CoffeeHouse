@@ -74,7 +74,7 @@ namespace CoffeeHouseAPI.Services.OrderService
         {
             decimal AllOrderPrice = 0m;
 
-            List<Order> orders = GetAllOrderWithRelate().Where(x => x.OrderLogs.LastOrDefault()!.StatusCode == "DELIVERED").ToList();
+            List<Order> orders = GetAllOrderWithRelate().Where(x => x.OrderLogs.LastOrDefault()!.StatusCode == "DELIVERED" && x.OrderValue == x.OrderPaid).ToList();
 
             foreach (var order in orders)
             {
@@ -102,16 +102,13 @@ namespace CoffeeHouseAPI.Services.OrderService
 
             if (order.Voucher != null)
             {
-                if (_voucherService.ValidateVoucher(order.Voucher))
+                if (order.Voucher.DiscountType == DiscountType.PERCENT.ToString())
                 {
-                    if (order.Voucher.DiscountType == DiscountType.PERCENT.ToString())
-                    {
-                        orderPrice -= orderPrice * order.Voucher.DiscountValue / 100;
-                    }
-                    else
-                    {
-                        orderPrice -= order.Voucher.DiscountValue;
-                    }
+                    orderPrice -= orderPrice * order.Voucher.DiscountValue / 100;
+                }
+                else
+                {
+                    orderPrice -= order.Voucher.DiscountValue;
                 }
             }
 

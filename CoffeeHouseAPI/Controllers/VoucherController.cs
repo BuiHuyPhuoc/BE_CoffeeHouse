@@ -67,16 +67,36 @@ namespace CoffeeHouseAPI.Controllers
             });
         }
 
-        //[HttpGet]
-        //[Route("GetVoucherByCode")]
-        //public IActionResult GetVoucherByCode(string code)
-        //{
-        //    var voucher = _context.Vouchers.Where(x => x.Code == code).FirstOrDefault();
+        [HttpGet]
+        [MasterAuth(true)]
+        [Route("GetAllVoucher")]
+        public async Task<IActionResult> GetAllVoucher()
+        {
+            var vouchers = await _context.Vouchers.ToListAsync();
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Value = _mapper.Map<List<VoucherDTO>>(vouchers),
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.GET)
+            });
+        }
 
-        //    if (voucher == null)
-        //    {
-                
-        //    }
-        //}
+        [HttpPost]
+        [MasterAuth(true)]
+        [Route("CreateVoucher")]
+        public async Task<IActionResult> CreateVoucher([FromBody] VoucherDTO voucherDTO)
+        {
+            var voucher = _mapper.Map<Voucher>(voucherDTO);
+            _context.Vouchers.Add(voucher);
+            await this.SaveChanges(_context);
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Value = _mapper.Map<VoucherDTO>(voucher),
+                Status = (int)HttpStatusCode.OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.POST)
+            });
+        }
     }
 }
