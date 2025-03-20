@@ -86,7 +86,7 @@ namespace CoffeeHouseAPI.Services.OrderService
 
         public decimal GetTotalPriceOrder(Order order)
         {
-            decimal orderPrice = 0m;
+            decimal orderPrice = 0;
             
             foreach (var orderDetail in order.OrderDetails)
             {

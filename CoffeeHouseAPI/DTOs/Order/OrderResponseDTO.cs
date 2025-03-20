@@ -26,5 +26,15 @@ namespace CoffeeHouseAPI.DTOs.Order
         public List<OrderLogDTO> OrderLogs { get; set; } = new List<OrderLogDTO>();
 
         public VoucherDTO? Voucher { get; set; }
+
+        public decimal? OrderValue { get; set; }
+
+        public decimal? OrderPaid { get; set; }
+
+        public string? PaymentMethod { get; set; }
+
+        public string? PaymentStatus { get; set; }
+
+        public DateTime? PaymentDate { get; set; }
     }
 }
