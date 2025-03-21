@@ -172,7 +172,7 @@ namespace CoffeeHouseAPI.Controllers
                         IsSuccess = false
                     });
                 }
-            } 
+            }
 
             string? imageUrl = null;
 
@@ -200,7 +200,11 @@ namespace CoffeeHouseAPI.Controllers
         [Route(nameof(DeleteCategory))]
         public async Task<IActionResult> DeleteCategory([FromQuery] int id)
         {
-            var category = await _context.Categories.Where(x => x.Id == id && x.IsValid).FirstOrDefaultAsync();
+            var category = await _context.Categories
+                .Include(x => x.Products.Where(x => x.IsValid))
+                .Include(x => x.InverseIdParentNavigation)
+                .Where(x => x.Id == id && x.IsValid).FirstOrDefaultAsync();
+
             if (category == null)
             {
                 return BadRequest(new APIResponseBase
@@ -210,6 +214,31 @@ namespace CoffeeHouseAPI.Controllers
                     IsSuccess = false
                 });
             }
+
+            bool checkHaveProduct = false;
+
+            if (category.IdParent == null)
+            {
+                foreach (var childCate in category.InverseIdParentNavigation)
+                {
+                    if (childCate.Products.Count > 0)
+                    {
+                        checkHaveProduct = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!checkHaveProduct)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    Status = (int)StatusCodes.Status400BadRequest,
+                    Message = "Category này có sản phẩm, không thể xoá",
+                    IsSuccess = false
+                });
+            }
+
             category.IsValid = false;
             await this.SaveChanges(_context);
 
