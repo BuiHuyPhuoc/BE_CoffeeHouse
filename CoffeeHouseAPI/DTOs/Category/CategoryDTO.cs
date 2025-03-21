@@ -11,7 +11,7 @@ namespace CoffeeHouseAPI.DTOs.Category
     public class CategoryRequestDTO : CategoryDTO
     {
         public int? IdParent { get; set; }
-        public ImageRequestDTO? Image { get; set; }
+        public ImageRequestDTO? CategoryImage { get; set; }
     }
 
     public class CategoryResponseDTO : CategoryDTO

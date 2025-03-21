@@ -81,7 +81,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (categoryDTO.IdParent == null && categoryDTO.Image == null)
+            if (categoryDTO.IdParent == null && categoryDTO.CategoryImage == null)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -91,9 +91,9 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (categoryDTO.Image != null)
+            if (categoryDTO.CategoryImage != null)
             {
-                var imageUrl = await _firebaseService.UploadImageAsync(categoryDTO.Image);
+                var imageUrl = await _firebaseService.UploadImageAsync(categoryDTO.CategoryImage);
                 category.Image = imageUrl;
             }
 
@@ -147,6 +147,7 @@ namespace CoffeeHouseAPI.Controllers
         {
             if (categoryDTO.IdParent != null)
             {
+                // Nếu là category con thì kiểm tra category cha có tồn tại không?
                 var parentCateogry = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == categoryDTO.IdParent);
 
                 if (parentCateogry == null)
@@ -161,7 +162,8 @@ namespace CoffeeHouseAPI.Controllers
             }
             else
             {
-                if (categoryDTO.Image == null)
+                // Nếu là category cha thì kiểm tra có ảnh không?
+                if (categoryDTO.CategoryImage == null)
                 {
                     return BadRequest(new APIResponseBase
                     {
@@ -170,9 +172,17 @@ namespace CoffeeHouseAPI.Controllers
                         IsSuccess = false
                     });
                 }
+            } 
+
+            string? imageUrl = null;
+
+            if (categoryDTO.CategoryImage != null)
+            {
+                imageUrl = await _firebaseService.UploadImageAsync(categoryDTO.CategoryImage);
             }
 
             var category = _mapper.Map<Category>(categoryDTO);
+            category.Image = imageUrl;
 
             await _context.Categories.AddAsync(category);
             await this.SaveChanges(_context);
