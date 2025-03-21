@@ -3,6 +3,7 @@ using CoffeeHouseAPI.DTOs.APIPayload;
 using CoffeeHouseAPI.DTOs.Category;
 using CoffeeHouseAPI.Enums;
 using CoffeeHouseAPI.Helper;
+using CoffeeHouseAPI.Services.Firebase;
 using CoffeeHouseLib.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,18 +17,20 @@ namespace CoffeeHouseAPI.Controllers
     {
         readonly DbcoffeeHouseContext _context;
         readonly IMapper _mapper;
+        readonly FirebaseService _firebaseService;
 
-        public CategoryController(DbcoffeeHouseContext context, IMapper mapper)
+        public CategoryController(DbcoffeeHouseContext context, IMapper mapper, FirebaseService firebaseService)
         {
             _context = context;
             _mapper = mapper;
+            _firebaseService = firebaseService;
         }
 
         [HttpGet]
-        [Route("GetCateogry")]
-        public async Task<IActionResult> GetCateogry()
+        [Route("GetCategory")]
+        public async Task<IActionResult> GetCategory()
         {
-            var category = await _context.Categories.Include(x => x.InverseIdParentNavigation).Where(x => x.IdParent == null).ToListAsync();
+            var category = await _context.Categories.Include(x => x.InverseIdParentNavigation).Where(x => x.IdParent == null && x.IsValid).AsNoTracking().ToListAsync();
             List<CategoryResponseDTO> categoryDTO = _mapper.Map<List<CategoryResponseDTO>>(category);
             return Ok(new APIResponseBase
             {
@@ -42,7 +45,7 @@ namespace CoffeeHouseAPI.Controllers
         [Route("GetCateogryById")]
         public async Task<IActionResult> GetCateogryById([FromQuery] int id)
         {
-            var category = await _context.Categories.Where(x => x.Id == id).Include(x => x.InverseIdParentNavigation).FirstOrDefaultAsync();
+            var category = await _context.Categories.Where(x => x.Id == id && x.IsValid).Include(x => x.InverseIdParentNavigation).AsNoTracking().FirstOrDefaultAsync();
             if (category == null)
             {
                 return BadRequest(new APIResponseBase
@@ -66,7 +69,8 @@ namespace CoffeeHouseAPI.Controllers
         [Route("UpdateCategory")]
         public async Task<IActionResult> UpdateCategory([FromQuery] int id, [FromBody] CategoryRequestDTO categoryDTO)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _context.Categories.Where(x => x.Id == id && x.IsValid).FirstOrDefaultAsync();
+
             if (category == null)
             {
                 return BadRequest(new APIResponseBase
@@ -75,6 +79,22 @@ namespace CoffeeHouseAPI.Controllers
                     Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.PUT),
                     IsSuccess = false
                 });
+            }
+
+            if (categoryDTO.IdParent == null && categoryDTO.Image == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    Status = (int)StatusCodes.Status400BadRequest,
+                    Message = "Category lớp 1 (lớp cha) phải truyền ảnh",
+                    IsSuccess = false
+                });
+            }
+
+            if (categoryDTO.Image != null)
+            {
+                var imageUrl = await _firebaseService.UploadImageAsync(categoryDTO.Image);
+                category.Image = imageUrl;
             }
 
             category.IdParent = categoryDTO.IdParent;
@@ -94,7 +114,7 @@ namespace CoffeeHouseAPI.Controllers
         [Route(nameof(GetParentCategory))]
         public IActionResult GetParentCategory()
         {
-            var category = _context.Categories.Where(x => x.IdParent == null).ToList();
+            var category = _context.Categories.Where(x => x.IdParent == null && x.IsValid).AsNoTracking().ToList();
             return Ok(new APIResponseBase
             {
                 Status = (int)StatusCodes.Status200OK,
@@ -108,7 +128,10 @@ namespace CoffeeHouseAPI.Controllers
         [Route(nameof(GetChildCategory))]
         public IActionResult GetChildCategory()
         {
-            var category = _context.Categories.Where(x => x.IdParent != null).ToList();
+            var category = _context.Categories
+                .Include(x => x.IdParentNavigation)
+                .Where(x => x.IdParent != null && x.IsValid && x.IdParentNavigation != null && x.IdParentNavigation.IsValid).AsNoTracking().ToList();
+
             return Ok(new APIResponseBase
             {
                 Status = (int)StatusCodes.Status200OK,
@@ -122,23 +145,38 @@ namespace CoffeeHouseAPI.Controllers
         [Route(nameof(CreateCategory))]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryRequestDTO categoryDTO)
         {
-            var parentCateogry = await _context.Categories.FindAsync(categoryDTO.IdParent);
-
-            if (parentCateogry == null)
+            if (categoryDTO.IdParent != null)
             {
-                return BadRequest(new APIResponseBase
+                var parentCateogry = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == categoryDTO.IdParent);
+
+                if (parentCateogry == null)
                 {
-                    Status = (int)StatusCodes.Status400BadRequest,
-                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.POST),
-                    IsSuccess = false
-                });
+                    return BadRequest(new APIResponseBase
+                    {
+                        Status = (int)StatusCodes.Status400BadRequest,
+                        Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.POST),
+                        IsSuccess = false
+                    });
+                }
+            }
+            else
+            {
+                if (categoryDTO.Image == null)
+                {
+                    return BadRequest(new APIResponseBase
+                    {
+                        Status = (int)StatusCodes.Status400BadRequest,
+                        Message = "Category lớp 1 (lớp cha) phải truyền ảnh",
+                        IsSuccess = false
+                    });
+                }
             }
 
             var category = _mapper.Map<Category>(categoryDTO);
-            
+
             await _context.Categories.AddAsync(category);
             await this.SaveChanges(_context);
-            
+
             return Ok(new APIResponseBase
             {
                 Status = (int)StatusCodes.Status200OK,
@@ -147,5 +185,31 @@ namespace CoffeeHouseAPI.Controllers
                 IsSuccess = true
             });
         }
+
+        [HttpDelete]
+        [Route(nameof(DeleteCategory))]
+        public async Task<IActionResult> DeleteCategory([FromQuery] int id)
+        {
+            var category = await _context.Categories.Where(x => x.Id == id && x.IsValid).FirstOrDefaultAsync();
+            if (category == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    Status = (int)StatusCodes.Status400BadRequest,
+                    Message = GENERATE_DATA.API_ACTION_RESPONSE(false, API_ACTION.DELETE),
+                    IsSuccess = false
+                });
+            }
+            category.IsValid = false;
+            await this.SaveChanges(_context);
+
+            return Ok(new APIResponseBase
+            {
+                Status = (int)StatusCodes.Status200OK,
+                Message = GENERATE_DATA.API_ACTION_RESPONSE(true, API_ACTION.DELETE),
+                IsSuccess = true
+            });
+        }
+
     }
 }

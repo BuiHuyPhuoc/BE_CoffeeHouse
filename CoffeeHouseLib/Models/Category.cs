@@ -13,6 +13,8 @@ public partial class Category
 
     public string? Image { get; set; }
 
+    public bool IsValid { get; set; }
+
     public virtual Category? IdParentNavigation { get; set; }
 
     public virtual ICollection<Category> InverseIdParentNavigation { get; set; } = new List<Category>();
