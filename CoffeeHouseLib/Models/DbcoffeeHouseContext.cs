@@ -21,11 +21,15 @@ public partial class DbcoffeeHouseContext : DbContext
 
     public virtual DbSet<Aiconfig> Aiconfigs { get; set; }
 
+    public virtual DbSet<Attachment> Attachments { get; set; }
+
     public virtual DbSet<Cart> Carts { get; set; }
 
     public virtual DbSet<CartDetail> CartDetails { get; set; }
 
     public virtual DbSet<Category> Categories { get; set; }
+
+    public virtual DbSet<ChatRoom> ChatRooms { get; set; }
 
     public virtual DbSet<Customer> Customers { get; set; }
 
@@ -34,6 +38,8 @@ public partial class DbcoffeeHouseContext : DbContext
     public virtual DbSet<Image> Images { get; set; }
 
     public virtual DbSet<ImageClass> ImageClasses { get; set; }
+
+    public virtual DbSet<Message> Messages { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
 
@@ -53,7 +59,11 @@ public partial class DbcoffeeHouseContext : DbContext
 
     public virtual DbSet<Review> Reviews { get; set; }
 
+    public virtual DbSet<RoomUser> RoomUsers { get; set; }
+
     public virtual DbSet<Topping> Toppings { get; set; }
+
+    public virtual DbSet<UserConnection> UserConnections { get; set; }
 
     public virtual DbSet<Voucher> Vouchers { get; set; }
 
@@ -126,6 +136,24 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.Property(e => e.Key).HasMaxLength(200);
         });
 
+        modelBuilder.Entity<Attachment>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Attachme__3214EC07029BA2E9");
+
+            entity.ToTable("Attachment");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.FilePath).HasMaxLength(500);
+            entity.Property(e => e.FileType).HasMaxLength(50);
+
+            entity.HasOne(d => d.Message).WithMany(p => p.Attachments)
+                .HasForeignKey(d => d.MessageId)
+                .HasConstraintName("FK__Attachmen__Messa__19AACF41");
+        });
+
         modelBuilder.Entity<Cart>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Cart__3214EC071369CECC");
@@ -179,10 +207,25 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.HasIndex(e => e.Id, "UQ__Category__3214EC065893F82D").IsUnique();
 
             entity.Property(e => e.CategoryName).HasMaxLength(50);
+            entity.Property(e => e.IsValid).HasDefaultValue(true);
 
             entity.HasOne(d => d.IdParentNavigation).WithMany(p => p.InverseIdParentNavigation)
                 .HasForeignKey(d => d.IdParent)
                 .HasConstraintName("FK__Category__IdPare__19DFD96B");
+        });
+
+        modelBuilder.Entity<ChatRoom>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__ChatRoom__3214EC07131888DD");
+
+            entity.ToTable("ChatRoom");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.RoomType).HasMaxLength(50);
         });
 
         modelBuilder.Entity<Customer>(entity =>
@@ -252,6 +295,29 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.Property(e => e.ImageClassCode).HasMaxLength(255);
             entity.Property(e => e.ImageClassName).HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Message__3214EC07E8E99C79");
+
+            entity.ToTable("Message");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsRead).HasDefaultValue(false);
+            entity.Property(e => e.MessageType).HasMaxLength(50);
+
+            entity.HasOne(d => d.Room).WithMany(p => p.Messages)
+                .HasForeignKey(d => d.RoomId)
+                .HasConstraintName("FK__Message__RoomId__13F1F5EB");
+
+            entity.HasOne(d => d.Sender).WithMany(p => p.Messages)
+                .HasForeignKey(d => d.SenderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Message__SenderI__14E61A24");
         });
 
         modelBuilder.Entity<Order>(entity =>
@@ -493,6 +559,31 @@ public partial class DbcoffeeHouseContext : DbContext
                 .HasConstraintName("FK__Review__ProductI__2FCF1A8A");
         });
 
+        modelBuilder.Entity<RoomUser>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__RoomUser__3214EC07EFEA3993");
+
+            entity.ToTable("RoomUser");
+
+            entity.HasIndex(e => new { e.RoomId, e.UserId }, "UQ__RoomUser__E3FEB5FC364E88B7").IsUnique();
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.JoinedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Role)
+                .HasMaxLength(50)
+                .HasDefaultValue("Member");
+
+            entity.HasOne(d => d.Room).WithMany(p => p.RoomUsers)
+                .HasForeignKey(d => d.RoomId)
+                .HasConstraintName("FK__RoomUser__RoomId__0C50D423");
+
+            entity.HasOne(d => d.User).WithMany(p => p.RoomUsers)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK__RoomUser__UserId__0D44F85C");
+        });
+
         modelBuilder.Entity<Topping>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Topping__3214EC0774242ACB");
@@ -504,6 +595,23 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.Property(e => e.IsValid).HasDefaultValue(true);
             entity.Property(e => e.ToppingName).HasMaxLength(255);
             entity.Property(e => e.ToppingPrice).HasColumnType("decimal(18, 0)");
+        });
+
+        modelBuilder.Entity<UserConnection>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__UserConn__3214EC07D376F82A");
+
+            entity.ToTable("UserConnection");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.ConnectedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ConnectionId).HasMaxLength(255);
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserConnections)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK__UserConne__UserI__1E6F845E");
         });
 
         modelBuilder.Entity<Voucher>(entity =>

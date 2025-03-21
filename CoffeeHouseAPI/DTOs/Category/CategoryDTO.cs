@@ -1,4 +1,6 @@
-﻿namespace CoffeeHouseAPI.DTOs.Category
+﻿using CoffeeHouseAPI.DTOs.Image;
+
+namespace CoffeeHouseAPI.DTOs.Category
 {
     public class CategoryDTO
     {
@@ -9,6 +11,7 @@
     public class CategoryRequestDTO : CategoryDTO
     {
         public int? IdParent { get; set; }
+        public ImageRequestDTO? Image { get; set; }
     }
 
     public class CategoryResponseDTO : CategoryDTO
