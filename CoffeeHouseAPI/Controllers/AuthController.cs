@@ -72,7 +72,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (customer.Account.BlockExpire != null && customer.Account.BlockExpire > DateTime.Now)
+            if (customer.Account.BlockExpire != null && customer.Account.BlockExpire > DateTime.UtcNow)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -87,7 +87,7 @@ namespace CoffeeHouseAPI.Controllers
                 customer.Account.LoginFailed += 1;
                 if (customer.Account.LoginFailed % 5 == 0)
                 {
-                    customer.Account.BlockExpire = DateTime.Now.AddMinutes(customer.Account.LoginFailed);
+                    customer.Account.BlockExpire = DateTime.UtcNow.AddMinutes(customer.Account.LoginFailed);
                 }
                 await this.SaveChanges(_context);
                 return BadRequest(new APIResponseBase
@@ -117,7 +117,7 @@ namespace CoffeeHouseAPI.Controllers
                 var oldRfsToken = _context.RefreshTokens.Find(customer.Account.RefreshToken);
                 if (oldRfsToken != null)
                 {
-                    oldRfsToken.Revoke = DateTime.Now;
+                    oldRfsToken.Revoke = DateTime.UtcNow;
                     await this.SaveChanges(_context);
                 }
             }
@@ -251,7 +251,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            account.VerifyTime = DateTime.Now;
+            account.VerifyTime = DateTime.UtcNow;
             await this.SaveChanges(_context);
 
             return Ok(new APIResponseBase
@@ -327,7 +327,7 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             string otp = GENERATE_DATA.GenerateNumber(6);
-            DateTime expire = DateTime.Now.AddMinutes(5);
+            DateTime expire = DateTime.UtcNow.AddMinutes(5);
 
             account.ResetPasswordExpired = expire;
             account.ResetPasswordToken = otp;
@@ -370,7 +370,7 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-            if (account.ResetPasswordExpired < DateTime.Now)
+            if (account.ResetPasswordExpired < DateTime.UtcNow)
             {
                 return BadRequest(new APIResponseBase
                 {
@@ -466,7 +466,7 @@ namespace CoffeeHouseAPI.Controllers
                     new Claim(ClaimTypes.Name, customer.FullName),
                     new Claim(ClaimTypes.Email, customer.Email)
                 }),
-                Expires = DateTime.Now.AddDays(Convert.ToDouble(builder.Configuration["Jwt:Expires"])),
+                Expires = DateTime.UtcNow.AddDays(Convert.ToDouble(builder.Configuration["Jwt:Expires"])),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials
@@ -493,8 +493,8 @@ namespace CoffeeHouseAPI.Controllers
             var refreshToken = new RefreshTokenDTO
             {
                 RefreshToken1 = rfsToken,
-                Expire = DateTime.Now.AddDays(1),
-                Created = DateTime.Now
+                Expire = DateTime.UtcNow.AddDays(1),
+                Created = DateTime.UtcNow
             };
 
             return refreshToken;

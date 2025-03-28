@@ -11,8 +11,6 @@ public partial class OrderAppliedFee
 
     public int FeeId { get; set; }
 
-    public decimal AppliedAmount { get; set; }
-
     public DateTime? CreatedAt { get; set; }
 
     public virtual OrderFee Fee { get; set; } = null!;

@@ -54,8 +54,8 @@ namespace CoffeeHouseAPI.Controllers
             newCart.Quantity = request.Quantity;
             newCart.ProductSizeId = getProductSize.Id;
             newCart.CustomerId = loginResponse.Id;
-            newCart.CreatedAt = DateTime.Now;
-            newCart.UpdatedAt = DateTime.Now;
+            newCart.CreatedAt = DateTime.UtcNow;
+            newCart.UpdatedAt = DateTime.UtcNow;
 
             await _context.AddAsync(newCart);
             await this.SaveChanges(_context);
@@ -191,7 +191,7 @@ namespace CoffeeHouseAPI.Controllers
 
             cart.ProductSizeId = updateModel.ProductSizeId;
             cart.Quantity = updateModel.Quantity;
-            cart.UpdatedAt = DateTime.Now;
+            cart.UpdatedAt = DateTime.UtcNow;
 
             _context.CartDetails.RemoveRange(cart.CartDetails);
             await this.SaveChanges(_context);
@@ -265,7 +265,7 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             cart.Quantity = request.Quantity;
-            cart.UpdatedAt = DateTime.Now;
+            cart.UpdatedAt = DateTime.UtcNow;
 
             await this.SaveChanges(_context);
 

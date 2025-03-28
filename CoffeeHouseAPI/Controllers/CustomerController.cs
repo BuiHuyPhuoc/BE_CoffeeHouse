@@ -106,7 +106,7 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             if (request.ImageName == "default_avatar")
-                request.ImageName = DateTime.Now.ToString("yyyyMMddhhssmm");
+                request.ImageName = DateTime.UtcNow.ToString("yyyyMMddhhssmm");
 
             // Add image to firebase
             string downloadUrl = await _firebaseService.UploadImageAsync(request);

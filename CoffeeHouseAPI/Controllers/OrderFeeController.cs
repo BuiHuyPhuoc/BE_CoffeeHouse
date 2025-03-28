@@ -29,8 +29,8 @@ namespace CoffeeHouseAPI.Controllers
         {
             var orderFees = _context.OrderFees
                 .Where(x => x.IsActive
-                && (x.EndDate == null || x.EndDate > DateTime.Now)
-                && (x.StartDate == null || x.StartDate < DateTime.Now))
+                && (x.EndDate == null || x.EndDate > DateTime.UtcNow)
+                && (x.StartDate == null || x.StartDate < DateTime.UtcNow))
                 .AsNoTracking()
                 .ToList();
 
