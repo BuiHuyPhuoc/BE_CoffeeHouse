@@ -6,6 +6,7 @@ using CoffeeHouseAPI.Extensions.MiddleWares;
 using CoffeeHouseAPI.Helper;
 using CoffeeHouseAPI.Services.Email;
 using CoffeeHouseLib.Models;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
 using Microsoft.AspNetCore.Http;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
@@ -441,6 +443,122 @@ namespace CoffeeHouseAPI.Controllers
                 Value = newToken
             });
         }
+
+        [HttpPost]
+        [Route(nameof(LoginWithGoogle))]
+        public async Task<IActionResult> LoginWithGoogle([FromBody] LoginGoogleDTO request)
+        {
+            var builder = WebApplication.CreateBuilder();
+            var clientId = builder.Configuration["Google:ClientId"];
+            var clientSecret = builder.Configuration["Google:ClientSecret"];
+
+            try
+            {
+                var payload = await GoogleJsonWebSignature.ValidateAsync(request.Token, new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = new[] { clientId }
+                });
+
+                var googleAccount = new
+                {
+                    Email = payload.Email,
+                    FullName = payload.Name,
+                };
+
+                var customer = await _context.Customers
+                                .Include(x => x.Account)
+                                .Include(x => x.AvatarImageNavigation)
+                                .Where(x => x.Email == googleAccount.Email && x.IsValid == true)
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync();
+
+                string newPassword = GENERATE_DATA.GenerateString(12);
+
+                if (customer == null || customer.Account == null)
+                {
+                    Customer newCustomer = new Customer();
+                    newCustomer.Email = googleAccount.Email;
+                    newCustomer.FullName = googleAccount.FullName;
+                    newCustomer.IsValid = true;
+                    newCustomer.IdRole = false;
+                    newCustomer.AvatarImage = 44;
+
+                    _context.Customers.Add(newCustomer);
+                    await this.SaveChanges(_context);
+
+                    Account newAccount = new Account();
+                    newAccount.Id = newCustomer.Id;
+                    newAccount.VerifyTime = DateTime.UtcNow;
+                    newAccount.LoginFailed = 0;
+                    newAccount.Password = newPassword;
+                    newAccount.VerifyToken = GENERATE_DATA.GenerateString(64);
+
+                    _context.Accounts.Add(newAccount);
+                    await this.SaveChanges(_context);
+                }
+
+                if (customer.Account.BlockExpire != null && customer.Account.BlockExpire > DateTime.UtcNow)
+                {
+                    return BadRequest(new APIResponseBase
+                    {
+                        IsSuccess = false,
+                        Message = $"Your account is blocked. Please try after {((DateTime)customer.Account!.BlockExpire).ToString("HH:mm:ss")}.",
+                        Status = (int)StatusCodes.Status400BadRequest,
+                    });
+                }
+
+                LoginResponse loginResponse = MasterAuth.MappingLoginResponseFromAccountAndCustomer(customer);
+
+                string stringToken = CreateToken(customer);
+
+                if (customer.Account.RefreshToken != null)
+                {
+                    var oldRfsToken = _context.RefreshTokens.Find(customer.Account.RefreshToken);
+                    if (oldRfsToken != null)
+                    {
+                        oldRfsToken.Revoke = DateTime.UtcNow;
+                        await this.SaveChanges(_context);
+                    }
+                }
+
+                RefreshTokenDTO refreshTokenDTO = GenerateRefreshToken();
+                RefreshToken refreshToken = _mapper.Map<RefreshToken>(refreshTokenDTO);
+                _context.RefreshTokens.Add(refreshToken);
+                await this.SaveChanges(_context);
+                customer.Account.RefreshToken = refreshToken.RefreshToken1;
+                customer.Account.LoginFailed = 0;
+                await this.SaveChanges(_context);
+
+                var options = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = refreshToken.Expire
+                };
+
+                Response.Cookies.Append("refreshToken", refreshToken.RefreshToken1, options);
+
+                return Ok(new APIResponseBase
+                {
+                    IsSuccess = true,
+                    Message = "Login success",
+                    Status = (int)StatusCodes.Status200OK,
+                    Value = new
+                    {
+                        Token = stringToken,
+                        UserAccount = loginResponse
+                    }
+                });
+
+            }
+            catch
+            {
+                return Unauthorized(new { message = "Xác thực thất bại" });
+            }
+        }
+
+
         private ObjectResult UnauthorizedResponse()
         {
             return Unauthorized(new APIResponseBase

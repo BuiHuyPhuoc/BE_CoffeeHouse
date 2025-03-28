@@ -19,9 +19,9 @@ public partial class OrderFee
 
     public DateTime? EndDate { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public virtual ICollection<OrderAppliedFee> OrderAppliedFees { get; set; } = new List<OrderAppliedFee>();
 }
