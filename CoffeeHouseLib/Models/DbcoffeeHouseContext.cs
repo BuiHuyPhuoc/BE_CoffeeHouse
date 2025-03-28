@@ -363,11 +363,6 @@ public partial class DbcoffeeHouseContext : DbContext
 
             entity.ToTable("OrderAppliedFee");
 
-            entity.Property(e => e.AppliedAmount).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-
             entity.HasOne(d => d.Fee).WithMany(p => p.OrderAppliedFees)
                 .HasForeignKey(d => d.FeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)

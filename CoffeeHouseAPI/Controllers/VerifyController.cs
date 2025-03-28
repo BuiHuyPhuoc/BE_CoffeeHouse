@@ -28,7 +28,7 @@ namespace CoffeeHouseAPI.Controllers
                     StatusCode = 400
                 };
             }
-            account.VerifyTime = DateTime.Now;
+            account.VerifyTime = DateTime.UtcNow;
             await this.SaveChanges(_context);
             return new ContentResult
             {

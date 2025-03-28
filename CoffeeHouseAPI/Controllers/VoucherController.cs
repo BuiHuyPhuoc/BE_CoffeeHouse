@@ -33,7 +33,7 @@ namespace CoffeeHouseAPI.Controllers
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
 
-            var vouchers = await _context.Vouchers.Where(x => x.IsActive && x.StartDate <= DateTime.Now).ToListAsync();
+            var vouchers = await _context.Vouchers.Where(x => x.IsActive && x.StartDate <= DateTime.UtcNow).ToListAsync();
 
             List<VoucherDTO> voucherDTOs = new List<VoucherDTO>();
 

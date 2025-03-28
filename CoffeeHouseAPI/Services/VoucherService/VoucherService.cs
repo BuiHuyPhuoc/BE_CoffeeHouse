@@ -46,8 +46,8 @@ namespace CoffeeHouseAPI.Services.VoucherService
 
         public bool ValidateVoucher(Voucher voucher)
         {
-            return (((voucher.EndDate != null && voucher.EndDate >= DateTime.Now) || voucher.EndDate == null)
-                && voucher.StartDate <= DateTime.Now && voucher.LitmitPerUser > 0) ? true : false;
+            return (((voucher.EndDate != null && voucher.EndDate >= DateTime.UtcNow) || voucher.EndDate == null)
+                && voucher.StartDate <= DateTime.UtcNow && voucher.LitmitPerUser > 0) ? true : false;
         }
     }
 }

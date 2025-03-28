@@ -88,7 +88,7 @@ namespace CoffeeHouseAPI.Controllers
                     Order newOrder = new Order();
                     newOrder.VoucherId = voucher?.Id;
                     newOrder.CustomerId = loginResponse.Id;
-                    newOrder.OrderDate = DateTime.Now;
+                    newOrder.OrderDate = DateTime.UtcNow;
                     newOrder.AddressId = address.Id;
                     newOrder.OrderPaid = 0;
                     newOrder.OrderValue = 0;
@@ -182,6 +182,44 @@ namespace CoffeeHouseAPI.Controllers
                             newOrder.VoucherId = voucher.Id;
                         }
                     }
+
+                    List<OrderAppliedFee> orderAppliedFees = new List<OrderAppliedFee>();
+
+                    foreach (var orderFeeId in request.Fees)
+                    {
+                        var orderFee = _context.OrderFees
+                                        .Where(x => x.IsActive && x.Id == orderFeeId
+                                        && (x.EndDate == null || x.EndDate > DateTime.UtcNow)
+                                        && (x.StartDate == null || x.StartDate < DateTime.UtcNow))
+                                        .FirstOrDefault();
+
+                        if (orderFee == null)
+                        {
+                            return BadRequest(new APIResponseBase
+                            {
+                                IsSuccess = false,
+                                Message = "Phí không hợp lệ",
+                                Status = (int)HttpStatusCode.BadRequest
+                            });
+                        }
+
+                        OrderAppliedFee orderAppliedFee = new OrderAppliedFee();
+                        orderAppliedFee.OrderId = newOrder.Id;
+                        orderAppliedFee.FeeId = orderFee.Id;
+                        orderAppliedFee.CreatedAt = DateTime.UtcNow;
+                        orderAppliedFees.Add(orderAppliedFee);
+                        if (orderFee.FeeType == "VALUE")
+                        {
+                            orderValue = orderValue + orderFee.Amount;
+                        }
+                        else if (orderFee.FeeType == "PERCENT")
+                        {
+                            orderValue = orderValue + (orderValue * orderFee.Amount / 100);
+                        }
+                    }
+
+                    _context.OrderAppliedFees.AddRange(orderAppliedFees);
+                    await this.SaveChanges(_context);
 
                     newOrder.OrderValue = orderValue;
 
@@ -283,7 +321,7 @@ namespace CoffeeHouseAPI.Controllers
                     Order newOrder = new Order();
                     newOrder.VoucherId = voucher?.Id;
                     newOrder.CustomerId = loginResponse.Id;
-                    newOrder.OrderDate = DateTime.Now;
+                    newOrder.OrderDate = DateTime.UtcNow;
                     newOrder.AddressId = address.Id;
 
                     _context.Orders.Add(newOrder);
@@ -503,7 +541,7 @@ namespace CoffeeHouseAPI.Controllers
                     OrderLog newOrderLog = new OrderLog();
                     newOrderLog.StatusCode = listOrderStatus[i - 1].StatusCode;
                     newOrderLog.OrderId = request.OrderId;
-                    newOrderLog.TimeLog = DateTime.Now;
+                    newOrderLog.TimeLog = DateTime.UtcNow;
                     newOrderLogs.Add(newOrderLog);
                 }
             }
@@ -512,7 +550,7 @@ namespace CoffeeHouseAPI.Controllers
                 OrderLog newOrderLog = new OrderLog();
                 newOrderLog.StatusCode = orderLog.StatusCode;
                 newOrderLog.OrderId = request.OrderId;
-                newOrderLog.TimeLog = DateTime.Now;
+                newOrderLog.TimeLog = DateTime.UtcNow;
                 newOrderLogs.Add(newOrderLog);
             }
             _context.OrderLogs.AddRange(newOrderLogs);
@@ -660,7 +698,7 @@ namespace CoffeeHouseAPI.Controllers
             {
                 order.OrderPaid = order.OrderValue;
                 order.PaymentStatus = request.PaymentStatus;
-                order.PaymentDate = DateTime.Now;
+                order.PaymentDate = DateTime.UtcNow;
                 order.PaymentId = request.PaymentId;
                 order.PaymentMethod = "ONLINE";
                 _context.Orders.Update(order);
@@ -800,7 +838,7 @@ namespace CoffeeHouseAPI.Controllers
             OrderLog orderLog = new OrderLog();
             orderLog.OrderId = id;
             orderLog.StatusCode = v;
-            orderLog.TimeLog = DateTime.Now;
+            orderLog.TimeLog = DateTime.UtcNow;
 
             await _context.OrderLogs.AddAsync(orderLog);
         }
@@ -845,7 +883,7 @@ namespace CoffeeHouseAPI.Controllers
                 .Include(x => x.Voucher)
                 .AsNoTracking()
                 .FirstOrDefault(x => x.Id == orderId);
-            
+
             if (order == null)
             {
                 return BadRequest(new APIResponseBase
@@ -857,7 +895,7 @@ namespace CoffeeHouseAPI.Controllers
             }
 
             decimal orderValue = _orderService.GetTotalPriceOrder(order);
-            
+
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,

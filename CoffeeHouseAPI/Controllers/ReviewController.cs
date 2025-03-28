@@ -63,8 +63,8 @@ namespace CoffeeHouseAPI.Controllers
             var loginResponse = this.GetLoginResponseFromHttpContext();
 
             var newReview = _mapper.Map<Review>(request);
-            newReview.UpdatedAt = DateTime.Now;
-            newReview.CreatedAt = DateTime.Now;
+            newReview.UpdatedAt = DateTime.UtcNow;
+            newReview.CreatedAt = DateTime.UtcNow;
             newReview.CustomerId = loginResponse.Id;
 
             _context.Reviews.Add(newReview);

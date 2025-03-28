@@ -380,7 +380,7 @@ namespace CoffeeHouseAPI.Controllers
             // Add product
             newProduct.Images = images;
             newProduct.ImageDefaultNavigation = imageDefault;
-            newProduct.CreatedAt = DateTime.Now;
+            newProduct.CreatedAt = DateTime.UtcNow;
 
             _context.Products.Add(newProduct);
             await this.SaveChanges(_context);
