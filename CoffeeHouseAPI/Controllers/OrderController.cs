@@ -153,11 +153,6 @@ namespace CoffeeHouseAPI.Controllers
                         orderValue += toppingValue * cart.Quantity;
                     }
 
-                    //if (orderValue != request.TotalPrice)
-                    //{
-                    //    throw new BaseException("Tổng giá trị đơn hàng không chính xác.");
-                    //}
-
                     if (request.VoucherId != null)
                     {
                         voucher = await _context.Vouchers.Where(x => x.Id == request.VoucherId && x.IsActive == true).FirstOrDefaultAsync();
