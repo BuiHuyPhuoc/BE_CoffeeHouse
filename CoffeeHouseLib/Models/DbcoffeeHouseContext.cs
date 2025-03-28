@@ -43,7 +43,11 @@ public partial class DbcoffeeHouseContext : DbContext
 
     public virtual DbSet<Order> Orders { get; set; }
 
+    public virtual DbSet<OrderAppliedFee> OrderAppliedFees { get; set; }
+
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
+
+    public virtual DbSet<OrderFee> OrderFees { get; set; }
 
     public virtual DbSet<OrderLog> OrderLogs { get; set; }
 
@@ -353,6 +357,28 @@ public partial class DbcoffeeHouseContext : DbContext
                 .HasConstraintName("FK__Order__VoucherId__75A278F5");
         });
 
+        modelBuilder.Entity<OrderAppliedFee>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__OrderApp__3214EC072898EAA1");
+
+            entity.ToTable("OrderAppliedFee");
+
+            entity.Property(e => e.AppliedAmount).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Fee).WithMany(p => p.OrderAppliedFees)
+                .HasForeignKey(d => d.FeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__OrderAppl__FeeId__4865BE2A");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.OrderAppliedFees)
+                .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__OrderAppl__Order__477199F1");
+        });
+
         modelBuilder.Entity<OrderDetail>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__OrderDet__3214EC07BBD8A9EE");
@@ -374,6 +400,26 @@ public partial class DbcoffeeHouseContext : DbContext
                 .HasForeignKey(d => d.ProductSizeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__OrderDeta__Produ__282DF8C2");
+        });
+
+        modelBuilder.Entity<OrderFee>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__OrderFee__3214EC079D90B0CD");
+
+            entity.ToTable("OrderFee");
+
+            entity.Property(e => e.Amount).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.FeeType).HasMaxLength(50);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<OrderLog>(entity =>

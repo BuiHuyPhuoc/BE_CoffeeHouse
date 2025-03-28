@@ -7,6 +7,7 @@ using CoffeeHouseAPI.DTOs.Customer;
 using CoffeeHouseAPI.DTOs.Discount;
 using CoffeeHouseAPI.DTOs.Image;
 using CoffeeHouseAPI.DTOs.Order;
+using CoffeeHouseAPI.DTOs.OrderFee;
 using CoffeeHouseAPI.DTOs.Product;
 using CoffeeHouseAPI.DTOs.ProductSize;
 using CoffeeHouseAPI.DTOs.Review;
@@ -124,6 +125,9 @@ namespace CoffeeHouseAPI.Helper
 
             CreateMap<OrderTopping, OrderToppingDTO>();
             CreateMap<OrderToppingDTO, OrderTopping>();
+
+            CreateMap<OrderFee, OrderFeeResponseDTO>();
+            CreateMap<OrderFeeResponseDTO, OrderFee>();
         }
     }
 }

@@ -31,6 +31,8 @@ public partial class Order
 
     public virtual Customer Customer { get; set; } = null!;
 
+    public virtual ICollection<OrderAppliedFee> OrderAppliedFees { get; set; } = new List<OrderAppliedFee>();
+
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
     public virtual ICollection<OrderLog> OrderLogs { get; set; } = new List<OrderLog>();
