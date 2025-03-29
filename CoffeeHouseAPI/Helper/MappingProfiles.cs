@@ -3,6 +3,7 @@ using AutoMapper;
 using CoffeeHouseAPI.DTOs.Address;
 using CoffeeHouseAPI.DTOs.Auth;
 using CoffeeHouseAPI.DTOs.Category;
+using CoffeeHouseAPI.DTOs.Chat;
 using CoffeeHouseAPI.DTOs.Customer;
 using CoffeeHouseAPI.DTOs.Discount;
 using CoffeeHouseAPI.DTOs.Image;
@@ -128,6 +129,9 @@ namespace CoffeeHouseAPI.Helper
 
             CreateMap<OrderFee, OrderFeeResponseDTO>();
             CreateMap<OrderFeeResponseDTO, OrderFee>();
+
+            CreateMap<SendMessageDTO, Message>();
+            CreateMap<Message, SendMessageDTO>();
         }
     }
 }
