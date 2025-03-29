@@ -19,6 +19,8 @@ public partial class Message
 
     public bool? IsRead { get; set; }
 
+    public string Status { get; set; } = null!;
+
     public virtual ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 
     public virtual ChatRoom Room { get; set; } = null!;

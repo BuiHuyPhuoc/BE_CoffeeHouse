@@ -11,7 +11,7 @@ public partial class Customer
 
     public DateTime? DateOfBirth { get; set; }
 
-    public string? Phone { get; set; } = null!;
+    public string? Phone { get; set; }
 
     public bool IdRole { get; set; }
 

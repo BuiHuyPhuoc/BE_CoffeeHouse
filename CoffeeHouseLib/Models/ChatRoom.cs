@@ -13,6 +13,10 @@ public partial class ChatRoom
 
     public DateTime? CreatedAt { get; set; }
 
+    public bool IsValid { get; set; }
+
+    public DateTime? LastMessageAt { get; set; }
+
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
 
     public virtual ICollection<RoomUser> RoomUsers { get; set; } = new List<RoomUser>();
