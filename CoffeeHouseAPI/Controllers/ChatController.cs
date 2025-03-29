@@ -31,6 +31,8 @@ namespace CoffeeHouseAPI.Controllers
         [Route(nameof(SendMessage))]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageDTO request)
         {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+
             var chatRoom = _context.ChatRooms.Where(x => x.Id == request.RoomId).FirstOrDefault();
 
             if (chatRoom == null)
@@ -47,6 +49,7 @@ namespace CoffeeHouseAPI.Controllers
             var message = _mapper.Map<Message>(request);
             message.Status = "Sent";
             message.CreatedAt = DateTime.UtcNow;
+            message.SenderId = loginResponse.Id;
             _context.Messages.Add(message);
             await this.SaveChanges(_context);
 
@@ -66,7 +69,7 @@ namespace CoffeeHouseAPI.Controllers
             await _hubContext.Clients.Clients(connections).SendAsync("ReceiveMessage", new
             {
                 RoomId = request.RoomId,
-                SenderId = request.SenderId,
+                SenderId = loginResponse.Id,
                 Content = request.Message,
                 CreatedAt = message.CreatedAt
             });
@@ -107,7 +110,7 @@ namespace CoffeeHouseAPI.Controllers
                 }
                 else
                 {
-                    groupName += ", " + user.FullName;
+                    groupName += user.FullName + ", ";
                 }
 
                 customers.Add(user);
