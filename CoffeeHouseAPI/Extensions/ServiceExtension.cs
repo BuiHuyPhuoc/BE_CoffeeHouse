@@ -37,9 +37,10 @@ namespace CoffeeHouseAPI.Extensions
             {
                 options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.AllowAnyHeader()
+                    policy.WithOrigins("https://coffeehousee.site")
+                          .AllowAnyHeader()
                           .AllowAnyMethod()
-                          .AllowAnyOrigin();
+                          .AllowCredentials();
                 });
             });
 
