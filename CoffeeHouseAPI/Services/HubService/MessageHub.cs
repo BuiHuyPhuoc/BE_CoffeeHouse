@@ -91,17 +91,4 @@ public class MessageHub : Hub
 
         await base.OnDisconnectedAsync(exception);
     }
-
-    public async Task SendMessage(int userId, string message)
-    {
-        var connectionIds = await _context.UserConnections
-            .Where(c => c.UserId == userId)
-            .Select(c => c.ConnectionId)
-            .ToListAsync();
-
-        foreach (var connectionId in connectionIds)
-        {
-            await Clients.Client(connectionId).SendAsync("ReceiveMessage", message);
-        }
-    }
 }
