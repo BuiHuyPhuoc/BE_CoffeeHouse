@@ -45,7 +45,6 @@ namespace CoffeeHouseAPI.Controllers
                 });
             }
 
-
             var message = _mapper.Map<Message>(request);
             message.Status = "Sent";
             message.CreatedAt = DateTime.UtcNow;
@@ -70,7 +69,7 @@ namespace CoffeeHouseAPI.Controllers
             {
                 RoomId = request.RoomId,
                 SenderId = loginResponse.Id,
-                Content = request.Message,
+                Content = request.Content,
                 CreatedAt = message.CreatedAt
             });
 
