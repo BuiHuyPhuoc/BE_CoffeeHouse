@@ -107,7 +107,7 @@ namespace CoffeeHouseAPI.Controllers
                 }
                 else
                 {
-                    groupName += ", " + user.FullName;
+                    groupName += user.FullName + ", ";
                 }
 
                 customers.Add(user);
