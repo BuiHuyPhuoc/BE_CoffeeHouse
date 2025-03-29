@@ -228,6 +228,7 @@ public partial class DbcoffeeHouseContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+            entity.Property(e => e.LastMessageAt).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(255);
             entity.Property(e => e.RoomType).HasMaxLength(50);
         });
@@ -313,6 +314,7 @@ public partial class DbcoffeeHouseContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.IsRead).HasDefaultValue(false);
             entity.Property(e => e.MessageType).HasMaxLength(50);
+            entity.Property(e => e.Status).HasMaxLength(20);
 
             entity.HasOne(d => d.Room).WithMany(p => p.Messages)
                 .HasForeignKey(d => d.RoomId)
@@ -653,6 +655,7 @@ public partial class DbcoffeeHouseContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.ConnectionId).HasMaxLength(255);
+            entity.Property(e => e.IsOnline).HasDefaultValue(true);
 
             entity.HasOne(d => d.User).WithMany(p => p.UserConnections)
                 .HasForeignKey(d => d.UserId)

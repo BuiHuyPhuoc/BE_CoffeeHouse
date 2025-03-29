@@ -15,6 +15,8 @@ public partial class RoomUser
 
     public string? Role { get; set; }
 
+    public bool IsValid { get; set; }
+
     public virtual ChatRoom Room { get; set; } = null!;
 
     public virtual Customer User { get; set; } = null!;

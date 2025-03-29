@@ -13,5 +13,7 @@ public partial class UserConnection
 
     public DateTime? ConnectedAt { get; set; }
 
+    public bool? IsOnline { get; set; }
+
     public virtual Customer User { get; set; } = null!;
 }
