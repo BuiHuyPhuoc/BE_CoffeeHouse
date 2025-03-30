@@ -49,7 +49,7 @@ namespace CoffeeHouseAPI.Helper
             }
 
             DbcoffeeHouseContext _context = new DbcoffeeHouseContext();
-            var account = await _context.Accounts.Where(x => x.IdNavigation.Email == email && (x.BlockExpire < DateTime.UtcNow || x.BlockExpire == null)).FirstOrDefaultAsync();
+            var account = await _context.Accounts.Where(x => x.IdNavigation.Email == email && x.IdNavigation.IsValid && (x.BlockExpire < DateTime.UtcNow || x.BlockExpire == null)).FirstOrDefaultAsync();
             if (account == null)
             {
                 context.Result = new UnauthorizedResult();
