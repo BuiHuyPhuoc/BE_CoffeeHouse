@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Runtime.InteropServices;
 
 namespace CoffeeHouseAPI.Controllers
 {
@@ -34,6 +35,18 @@ namespace CoffeeHouseAPI.Controllers
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
 
             var chatRoom = _context.ChatRooms.Where(x => x.Id == request.RoomId).FirstOrDefault();
+
+            bool checkUserIsInRoom = _context.RoomUsers.Any(x => x.RoomId == request.RoomId && x.UserId == loginResponse.Id);
+
+            if (!checkUserIsInRoom)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "User is not in this room",
+                    Status = StatusCodes.Status400BadRequest,
+                });
+            }
 
             if (chatRoom == null)
             {
@@ -83,6 +96,74 @@ namespace CoffeeHouseAPI.Controllers
         }
 
         [HttpPost]
+        [Route(nameof(GetMessageInRoom))]
+        public async Task<IActionResult> GetMessageInRoom([FromBody] GetMessageInRoomDTO request)
+        {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+            var chatRoom = _context.ChatRooms.Where(x => x.Id == request.RoomId && x.IsValid).FirstOrDefault();
+
+            if (chatRoom == null)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Chat room not found",
+                    Status = StatusCodes.Status404NotFound,
+                });
+            }
+
+            bool checkUserIsInRoom = _context.RoomUsers.Any(x => x.RoomId == request.RoomId && x.UserId == loginResponse.Id);
+
+            if (!checkUserIsInRoom)
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "User is not in this room",
+                    Status = StatusCodes.Status400BadRequest,
+                });
+            }
+
+            var messages = await _context.Messages
+                .Where(x => x.RoomId == request.RoomId)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(request.Quantity)
+                .ToListAsync();
+
+            var messageDTOs = _mapper.Map<List<MessageResponseDTO>>(messages);
+            
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Message = "Get message in room successfully",
+                Status = StatusCodes.Status200OK,
+                Value = messageDTOs,
+            });
+        }
+
+        [HttpGet]
+        [Route(nameof(GetChatRoom))]
+        public async Task<IActionResult> GetChatRoom()
+        {
+            LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
+            
+            var chatRooms = await _context.RoomUsers
+                .Where(x => x.UserId == loginResponse.Id && x.IsValid && x.Room.IsValid)
+                .Select(x => x.Room)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var chatRoomDTOs = _mapper.Map<List<ChatRoomResponseDTO>>(chatRooms);
+            return Ok(new APIResponseBase
+            {
+                IsSuccess = true,
+                Message = "Get chat room successfully",
+                Status = StatusCodes.Status200OK,
+                Value = chatRoomDTOs,
+            });
+        }
+
+        [HttpPost]
         [Route(nameof(CreateGroupChat))]
         public async Task<IActionResult> CreateGroupChat([FromBody] CreateGroupChatDTO request)
         {
@@ -119,6 +200,7 @@ namespace CoffeeHouseAPI.Controllers
             newChatRoom.Name = groupName;
             newChatRoom.RoomType = request.RoomType;
             newChatRoom.CreatedAt = DateTime.UtcNow;
+            newChatRoom.IsValid = true;
 
             _context.ChatRooms.Add(newChatRoom);
             await this.SaveChanges(_context);
