@@ -131,7 +131,7 @@ namespace CoffeeHouseAPI.Controllers
                 .ToListAsync();
 
             var messageDTOs = _mapper.Map<List<MessageResponseDTO>>(messages);
-            
+
             return Ok(new APIResponseBase
             {
                 IsSuccess = true,
@@ -146,7 +146,7 @@ namespace CoffeeHouseAPI.Controllers
         public async Task<IActionResult> GetChatRoom()
         {
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
-            
+
             var chatRooms = await _context.RoomUsers
                 .Where(x => x.UserId == loginResponse.Id && x.IsValid && x.Room.IsValid)
                 .Select(x => x.Room)
@@ -167,13 +167,25 @@ namespace CoffeeHouseAPI.Controllers
         [Route(nameof(CreateGroupChat))]
         public async Task<IActionResult> CreateGroupChat([FromBody] CreateGroupChatDTO request)
         {
+            if (request.RoomType != "GROUP" && request.RoomType != "PRIVATE")
+            {
+                return BadRequest(new APIResponseBase
+                {
+                    IsSuccess = false,
+                    Message = "Room type is GROUP or PRIVATE",
+                    Status = StatusCodes.Status400BadRequest,
+                });
+            }
+
             string groupName = "";
             List<Customer> customers = new List<Customer>();
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
 
             for (int i = 0; i < request.CustomerIds.Count; i++)
             {
-                var user = _context.Customers.Where(x => x.Id == request.CustomerIds[i] && x.IsValid && x.Account != null).FirstOrDefault();
+                var user = _context.Customers
+                    .Where(x => x.Id == request.CustomerIds[i] && x.IsValid && x.Account != null)
+                    .FirstOrDefault();
                 if (user == null)
                 {
                     return Ok(new APIResponseBase
@@ -184,13 +196,16 @@ namespace CoffeeHouseAPI.Controllers
                     });
                 }
 
-                if (i == request.CustomerIds.Count - 1)
+                if (request.RoomType == "GROUP")
                 {
-                    groupName += user.FullName;
-                }
-                else
-                {
-                    groupName += user.FullName + ", ";
+                    if (i == request.CustomerIds.Count - 1)
+                    {
+                        groupName += user.FullName;
+                    }
+                    else
+                    {
+                        groupName += user.FullName + ", ";
+                    }
                 }
 
                 customers.Add(user);
@@ -201,6 +216,7 @@ namespace CoffeeHouseAPI.Controllers
             newChatRoom.RoomType = request.RoomType;
             newChatRoom.CreatedAt = DateTime.UtcNow;
             newChatRoom.IsValid = true;
+            newChatRoom.RoomImage = "https://firebasestorage.googleapis.com/v0/b/shopoes-2e0b8.appspot.com/o/coffee_house%2Fchat_icon.png?alt=media&token=24cadc00-86bf-4d8a-883e-7e81e37798f3";
 
             _context.ChatRooms.Add(newChatRoom);
             await this.SaveChanges(_context);
