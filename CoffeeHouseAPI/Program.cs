@@ -36,6 +36,7 @@ namespace CoffeeHouseAPI
 
             app.MapHub<OrderHub>("/orderHub");
             app.MapHub<MessageHub>("/messageHub");
+            app.MapHub<MessageHub>("/userConnectionHub");
 
             app.Run();
         }
