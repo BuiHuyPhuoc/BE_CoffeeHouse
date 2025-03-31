@@ -1,4 +1,7 @@
-﻿namespace CoffeeHouseAPI.DTOs.Chat
+﻿using CoffeeHouseAPI.DTOs.Customer;
+using CoffeeHouseLib.Models;
+
+namespace CoffeeHouseAPI.DTOs.Chat
 {
     public class ChatRoomResponseDTO
     {
@@ -13,5 +16,7 @@
         public bool IsValid { get; set; }
 
         public DateTime? LastMessageAt { get; set; }
+
+        public List<RoomUserResponseDTO> RoomUsers { get; set; } = new List<RoomUserResponseDTO>();
     }
 }

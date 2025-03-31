@@ -148,10 +148,11 @@ namespace CoffeeHouseAPI.Controllers
             LoginResponse loginResponse = this.GetLoginResponseFromHttpContext();
 
             var chatRooms = await _context.RoomUsers
-                .Where(x => x.UserId == loginResponse.Id && x.IsValid && x.Room.IsValid)
-                .Select(x => x.Room)
-                .AsNoTracking()
-                .ToListAsync();
+                            .Where(x => x.UserId == loginResponse.Id && x.IsValid && x.Room.IsValid)
+                            .Include(x => x.Room).ThenInclude(r => r.RoomUsers).ThenInclude(y => y.User).ThenInclude(z => z.AvatarImageNavigation)
+                            .Select(x => x.Room)
+                            .AsNoTracking()
+                            .ToListAsync();
 
             var chatRoomDTOs = _mapper.Map<List<ChatRoomResponseDTO>>(chatRooms);
             return Ok(new APIResponseBase
