@@ -37,10 +37,9 @@ namespace CoffeeHouseAPI.Extensions
             {
                 options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.WithOrigins("https://coffeehousee.site")
+                    policy.AllowAnyOrigin()
                           .AllowAnyHeader()
-                          .AllowAnyMethod()
-                          .AllowCredentials();
+                          .AllowAnyMethod();
                 });
             });
 
@@ -102,7 +101,7 @@ namespace CoffeeHouseAPI.Extensions
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "Coffee Store API", Version = "v1" });
 
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
@@ -111,7 +110,7 @@ namespace CoffeeHouseAPI.Extensions
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "Nhập token theo format: Bearer {your token}"
+                    Description = "Your token: Bearer {your token}"
                 });
 
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
