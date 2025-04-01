@@ -17,6 +17,8 @@ public partial class ChatRoom
 
     public DateTime? LastMessageAt { get; set; }
 
+    public string? RoomImage { get; set; }
+
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
 
     public virtual ICollection<RoomUser> RoomUsers { get; set; } = new List<RoomUser>();

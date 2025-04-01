@@ -135,6 +135,12 @@ namespace CoffeeHouseAPI.Helper
 
             CreateMap<ChatRoomResponseDTO, ChatRoom>();
             CreateMap<ChatRoom, ChatRoomResponseDTO>();
+
+            CreateMap<RoomUser, RoomUserResponseDTO>();
+            CreateMap<RoomUserResponseDTO, RoomUser>();
+
+            CreateMap<ChatRoomResponseDTO, ChatRoom>();
+            CreateMap<ChatRoom, ChatRoomResponseDTO>();
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace CoffeeHouseAPI.DTOs.Customer
+﻿using CoffeeHouseAPI.DTOs.Image;
+
+namespace CoffeeHouseAPI.DTOs.Customer
 {
     public class CustomerDTO
     {
@@ -15,6 +17,8 @@
         public string Email { get; set; } = null!;
 
         public bool IsValid { get; set; }
+
+        public ImageResponseDTO? AvatarImageNavigation { get; set; }
     }
 
     public class CustomerInforDTO : CustomerDTO
